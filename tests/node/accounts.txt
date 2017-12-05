@@ -1,0 +1,47 @@
+(0):
+ Seed text:           foo0
+ Seed:                3csAfH
+ Account seed:        58zgAnBg775J6NKd4qVtfeX3m5TBMeizHNY9STvm2N87
+ Private account key: FYLXp1ecxQ6WCPD4axTotHU9RVfPCBLfSeKx1XSCyvdT
+ Public account key:  GbGEY3XVc2ohdv6hQBukVKSTQyqP8rjQ8Kigkj6bL57S
+ Account address:     3JfE6tjeT7PnpuDQKxiVNLn4TJUFhuMaaT5
+
+(1):
+ Seed text:           foo3
+ Seed:                3csAfL
+ Account seed:        DKPnB1S9Nsp1iKvYBavMFpghtRNZC13jKP9D1ddZSbe2
+ Private account key: EXKwLZybgit3uKddrMDNBXXES4P2prUmMPqHMWpyY1V5
+ Public account key:  3tWuqg9syHTsdmNNmwUbguLUhnpyE5AS4rpkojgm6aw2
+ Account address:     3Jk2fh8aMBmhCQCkBcUfKBSEEa3pDMkDjCr
+
+(2):
+ Seed text:           foo2
+ Seed:                3csAfK
+ Account seed:        D9pXdak1W1T6PQ7ytRMLmS8nEdvcWq2KgGEN3qkRybQM
+ Private account key: 97i6eG8eyeqWpJRdKEvU6Nk6EsE5y9iYXbfYE8NDd2Qm
+ Public account key:  3VCZnUL9xKU8Va8T6gitPD3vvZbZsS3UzfQKkUa1gmF9
+ Account address:     3JuJRCEthv5KFLpWa1abtMDKAJSeviE2dEe
+
+(3):
+ Seed text:           foo4
+ Seed:                3csAfM
+ Account seed:        G2QY7cBg5rXQ9pgsmnhnSjbqU6ZxTuzxRs1o12qf4x2q
+ Private account key: 3ik3FCGhWHNzofdJUNNaPtCbhX5Km7YFBjxjdJUzCb1Q
+ Public account key:  Ad23whTEeHayioPfA5yVk5nuikXnDFSWyQhL5o9rYWfT
+ Account address:     3JxvWTjGzKtFbzk38QLb2Ls1mTc68UEXdTb
+
+(4):
+ Seed text:           foo1
+ Seed:                3csAfJ
+ Account seed:        EN6tUvkfYk4NRs7L9HxqQySWV98e4Gy6ddg2zwnLWfTD
+ Private account key: 4GRyycHFjaUfN3F4s3DTpUVvBEN8kZnkhuiAD7HKcExF
+ Public account key:  5SuT9Zw9zWucdDBr3SAZjVG9mByYJdeMuEVuXsXrNjMH
+ Account address:     3JtPBcU2uMBKmUfcyfRq5Wwjv4wxnNqmFnq
+
+(5):
+ Seed text:           foo5
+ Seed:                3csAfN
+ Account seed:        3WuFRhpnWtxiFJ7D6WAVs8ncfgtXzYTLgBtNf9dhBem9
+ Private account key: 971yfGYemHLrN74vju5qANR41CFere4CqrTZp8qZ6btX
+ Public account key:  57uFj9kiD1UKBSFyxtRLoWKAmSb1KnyTSj83h2jT16L9
+ Account address:     3JwfZvdBdAwvzHr7TkXi3zDqKzngwtf8d4f

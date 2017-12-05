@@ -29,6 +29,7 @@ module.exports = async (currentBlock) => {
     .flattenDeep()
     .value();
 
+  console.log(txs);
 
   return await filterTxsByAccountService(txs);
 };
