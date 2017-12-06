@@ -1,11 +1,14 @@
 {
-  "name": "middleware_eth.blockProcessor",
+  "name": "middleware_waves.blockProcessor",
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
     "amqplib": "^0.5.1",
+    "base58-native": "^0.1.4",
     "bluebird": "^3.5.0",
     "bunyan": "^1.8.10",
+    "bytebuffer": "^5.0.1",
+    "curve25519-js": "git+https://github.com/wavesplatform/curve25519-js",
     "dotenv": "^4.0.0",
     "lodash": "^4.17.4",
     "mongoose": "^4.11.11",
@@ -16,7 +19,7 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c .eslintrc.js --ext .js --fix --ignore-path .eslintignore .",
-    "test": "node ./node_modules/mocha/bin/mocha -t 90000 tests"
+    "test": "node ./node_modules/mocha/bin/mocha -t 300000 tests"
   },
   "author": "",
   "license": "ISC",

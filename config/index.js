@@ -16,7 +16,8 @@ const config = {
   },
   waves: {
     rpc: process.env.RPC || 'http://localhost:6869',
-    network: process.env.NETWORK || 'testnet'
+    network: process.env.NETWORK || 'testnet',
+    blockGenerationTime: process.env.BLOCK_GENERATION_TIME || 60
   }
 };
 

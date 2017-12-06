@@ -4,14 +4,22 @@ const blockModel = require('../../models/blockModel'),
   _ = require('lodash'),
   Promise = require('bluebird');
 
-module.exports = () =>
-  new Promise(res => {
+module.exports = () => {
+  let latestBlock = null;
+
+  return new Promise(res => {
     let check = async () => {
-      let latestBlock = (await RPC('blocks.height')).height;
-      await Promise.delay(1000);
+      if (!latestBlock)
+        latestBlock = await RPC('blocks.last');
+
+      if(Date.now() - latestBlock.timestamp < 1000 * config.waves.blockGenerationTime)
+        await Promise.delay(Date.now() - latestBlock.timestamp);
+
+
       let currentBlock = await blockModel.findOne({network: config.waves.network});
-      _.get(currentBlock, 'block', 0) > latestBlock - 10 ?
+      _.get(currentBlock, 'block', 0) >= latestBlock.height ?
         res() : check()
     };
     check();
   });
+}

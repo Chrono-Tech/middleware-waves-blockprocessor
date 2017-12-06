@@ -4,6 +4,7 @@
  * @requires services/filterTxsByAccount
  */
 const _ = require('lodash'),
+  config = require('../config'),
   Promise = require('bluebird'),
   RPC = require('../utils/RPC'),
   filterTxsByAccountService = require('./filterTxsByAccountService');
@@ -22,7 +23,7 @@ module.exports = async (currentBlock) => {
   let blocks = await RPC(`blocks.seq.${currentBlock}.${currentBlock + 10}`);
 
   blocks = _.filter(blocks, block =>
-    Date.now() - block.timestamp > 1000 * 60
+    Date.now() - block.timestamp > 1000 * config.waves.blockGenerationTime
   );
 
   if (!blocks.length)
@@ -38,5 +39,5 @@ module.exports = async (currentBlock) => {
   return {
     filteredTxs: filteredTxs,
     block: currentBlock + blocks.length
-  }
+  };
 };

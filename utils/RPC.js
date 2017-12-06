@@ -1,5 +1,4 @@
-const _ = require('lodash'),
-  config = require('../config'),
+const config = require('../config'),
   request = require('request-promise'),
   URL = require('url').URL;
 
