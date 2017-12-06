@@ -21,15 +21,22 @@ module.exports = async (currentBlock) => {
    */
   let blocks = await RPC(`blocks.seq.${currentBlock}.${currentBlock + 10}`);
 
+  blocks = _.filter(blocks, block =>
+    Date.now() - block.timestamp > 1000 * 60
+  );
+
   if (!blocks.length)
     return Promise.reject({code: 0});
 
   let txs = _.chain(blocks)
-    .map(block=>block.transactions)
+    .map(block => block.transactions)
     .flattenDeep()
     .value();
 
-  console.log(txs);
+  let filteredTxs = await filterTxsByAccountService(txs);
 
-  return await filterTxsByAccountService(txs);
+  return {
+    filteredTxs: filteredTxs,
+    block: currentBlock + blocks.length
+  }
 };

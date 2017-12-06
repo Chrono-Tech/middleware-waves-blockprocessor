@@ -38,7 +38,7 @@ describe('core/block processor', function () {
   it('send some waves from 0 account to account 1', async () => {
 
     let transferTx = transaction.transfer(accounts[1].address, 100000, accounts[0]);
-    ctx.result = await RPC('assets.broadcast.transfer', transferTx, transferTx);
+    ctx.result = await RPC('assets.broadcast.transfer', transferTx, true);
     expect(ctx.result.id).to.be.string;
   });
 
@@ -55,10 +55,9 @@ describe('core/block processor', function () {
 
     return await Promise.all([
       (async () => {
-        await Promise.delay(5000);
+        await Promise.delay(10000);
         let transferTx = transaction.transfer(accounts[1].address, 100000, accounts[0]);
-        ctx.result = await RPC('assets.broadcast.transfer', transferTx, transferTx);
-        console.log('published', ctx.result.id);
+        ctx.result = await RPC('assets.broadcast.transfer', transferTx, true);
       })(),
       (async () => {
         try {
@@ -71,7 +70,6 @@ describe('core/block processor', function () {
         return await new Promise(res => {
           channel.consume(`app_${config.rabbit.serviceName}_test.transaction`, data => {
             let tx = JSON.parse(data.content.toString());
-            console.log('rmq', tx.id);
             if (tx.id === ctx.result.id)
               res();
           }, {noAck: true})
@@ -83,8 +81,8 @@ describe('core/block processor', function () {
         return await new Promise(res =>
           client.connect('guest', 'guest', () => {
             client.subscribe(`/exchange/events/${config.rabbit.serviceName}_transaction.${accounts[1].address}`, data => {
-              console.log('stomp', JSON.parse(data.body).id);
-              if (data.body.id === ctx.result.id)
+              let tx = JSON.parse(data.body);
+              if (tx.id === ctx.result.id)
                 res();
             })
           })

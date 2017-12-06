@@ -53,9 +53,9 @@ const init = async () => {
      */
     let processBlock = async () => {
       try {
-        let filteredTxs = await Promise.resolve(blockProcessService(currentBlock)).timeout(20000);
+        let result = await Promise.resolve(blockProcessService(currentBlock)).timeout(20000);
 
-        for (let tx of filteredTxs) {
+        for (let tx of result.filteredTxs) {
           let addresses = _.chain([tx.sender, tx.recipient])
             .compact()
             .uniq()
@@ -72,7 +72,7 @@ const init = async () => {
           }
         }, {upsert: true});
 
-        currentBlock++;
+        currentBlock = result.block;
         processBlock();
       } catch (err) {
 
@@ -87,6 +87,7 @@ const init = async () => {
           return setTimeout(processBlock, 10000);
         }
 
+        log.error('inside!');
         currentBlock++;
         processBlock();
       }
