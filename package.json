@@ -15,7 +15,12 @@
     "mongoose-long": "^0.1.1",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
-    "require-all": "^2.2.0"
+    "require-all": "^2.2.0",
+    "semaphore": "^1.1.0",
+    "tweetnacl": "^1.0.0",
+    "websocket": "^1.0.25",
+    "websocket-as-promised": "^0.6.0",
+    "ws": "^5.1.0"
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c .eslintrc.js --ext .js --fix --ignore-path .eslintignore .",
