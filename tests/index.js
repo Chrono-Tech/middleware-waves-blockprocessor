@@ -17,7 +17,7 @@ const expect = require('chai').expect,
   clearQueues = require('./helpers/clearQueues'),
   consumeMessages = require('./helpers/consumeMessages'),
   consumeStompMessages = require('./helpers/consumeStompMessages'),
-  sender = require('../services/nodeSenderService'),
+  requests = require('../services/nodeRequests'),
   Stomp = require('webstomp-client');
 
 let accounts, amqpInstance;
@@ -58,12 +58,12 @@ describe('core/block processor', function () {
       expect(content.id).to.equal(transferTx.id);
     };
 
-    const transferTx = await sender.signTransaction(
+    const transferTx = await requests.signTransaction(
       config.dev.apiKey, accounts[1], 100, accounts[0]);
 
     return await Promise.all([
       (async() => {
-         await sender.sendTransaction(config.dev.apiKey, transferTx);
+         await requests.sendTransaction(config.dev.apiKey, transferTx);
       })(),
       (async () => {
         const channel = await amqpInstance.createChannel();  
@@ -85,12 +85,12 @@ describe('core/block processor', function () {
 
   it('del account and send some waves from account1 to account2 and validate that zero messages', async () => {
     await accountModel.remove();
-    const transferTx = await sender.signTransaction(
+    const transferTx = await requests.signTransaction(
       config.dev.apiKey, accounts[1], 100, accounts[0]);
 
     return await Promise.all([
       (async() => {
-         await sender.sendTransaction(config.dev.apiKey, transferTx);
+         await requests.sendTransaction(config.dev.apiKey, transferTx);
       })(),
       (async () => {
         await Promise.delay(12000);

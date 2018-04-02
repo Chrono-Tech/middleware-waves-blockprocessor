@@ -38,15 +38,29 @@ const errorHandler = async (err) => {
 };
 
 
+/**
+ * @return {Promise return Number}
+ */
 const getLastBlockNumber = async () => {
   const result = await get('/blocks/height');
   return ((result.height && result.height > 0) ? result.height : 0);
 };
 
+/**
+ * 
+ * @param {Number} height 
+ * @return {Promise return Object}
+ */
 const getBlockByNumber = async (height) => {
   const block = await get(`/blocks/at/${height}`);
   return createBlock(block); 
 };
+
+/**
+ * 
+ * @param {Array of String} hashes 
+ * @return {Promise return Object[]}
+ */
 const getBlocksByHashes = async (hashes) => {
   const blocks = await Promise.map(hashes, 
     async blockHash => await get(`blocks/signature/${blockHash}`).catch(() => null)
@@ -56,9 +70,14 @@ const getBlocksByHashes = async (hashes) => {
 };
 
 
-
-const getAccount = async (address) => await get(`/account/get?address=${address}`);
-const getUnconfirmedTransactions = async (address) => await get(`/account/unconfirmedTransactions?address=${address}`);
+/**
+ * 
+ * @param {String} apiKey 
+ * @param {String} toAddress 
+ * @param {Number} amount 
+ * @param {String} fromAddress 
+ * @return {Promise return Object}
+ */
 const signTransaction = async (apiKey, toAddress, amount, fromAddress) => {
   return await privatePost('transactions/sign', {
     type: 4,
@@ -70,18 +89,23 @@ const signTransaction = async (apiKey, toAddress, amount, fromAddress) => {
   }, apiKey);
 };
 
+/**
+ * only for test
+ * @param {String} apiKey 
+ * @param {Object} tx 
+ * @return {Promise}
+ */
 const sendTransaction = async (apiKey, tx) => {
   return await privatePost('transactions/broadcast', tx, apiKey);
 };
 
 
 module.exports = {
-  getAccount,
-  getUnconfirmedTransactions,
-  signTransaction,
-  sendTransaction,
-
   getBlockByNumber,
   getBlocksByHashes,
-  getLastBlockNumber
+  getLastBlockNumber,
+
+  //for tests only
+  signTransaction,
+  sendTransaction,
 };

@@ -1,11 +1,12 @@
 const config = require('../config'),
-  bunyan = require('bunyan'),
   _ = require('lodash'),
   sem = require('semaphore')(1),
 
-  log = bunyan.createLogger({name: 'app.services.blockWatchingService'}),
   blockModel = require('../models/blockModel');
 
+/**
+ * @return {Promise return blockModels}
+ */
 const findLastBlocks = async () => {
   return await blockModel.find({
     network: config.node.network,
@@ -17,7 +18,10 @@ const findLastBlocks = async () => {
   }).limit(config.consensus.lastBlocksValidateAmount);
 };
 
-const getUnconfirmedBlock = async () => {
+/**
+ * @return {Promise return blockModel}
+ */
+const findUnconfirmedBlock = async () => {
   return await blockModel.findOne({
     number: -1
   }) || new blockModel({
@@ -28,7 +32,11 @@ const getUnconfirmedBlock = async () => {
   });
 };
 
-const getBlocksByHashes = async (hashes) => {
+/**
+ * @param {Array of String} hashes
+ * @return {Array of blockModel}
+ */
+const findBlocksByHashes = async (hashes) => {
   if (hashes.length === 0) 
     return [];
   return await blockModel.find({
@@ -40,13 +48,21 @@ const getBlocksByHashes = async (hashes) => {
   });
 };
 
+/**
+ * @return {Promise}
+ */
 const removeUnconfirmedBlock = async () => {
   return await blockModel.remove({
     number: -1
   });
 };
 
-const updateUnconfirmedBlock = async (block) => {
+/**
+ * 
+ * @param {blockModel} block 
+ * @return {Promise}
+ */
+const saveUnconfirmedBlock = async (block) => {
   return await blockModel.findOneAndUpdate({
     number: -1
   }, _.omit(block.toObject(), '_id', '__v'), {
@@ -55,6 +71,12 @@ const updateUnconfirmedBlock = async (block) => {
 };
 
 
+/**
+ * 
+ * @param {blockModel} block 
+ * @param {Array of transactions || null} txs
+ * @return {blockModel} 
+ */
 const createBlock = (block, txs = []) => {
   return _.merge(block, {
     network: config.node.network,
@@ -65,47 +87,63 @@ const createBlock = (block, txs = []) => {
   });
 };
 
+/**
+ * @return {Promise}
+ */
 const initModels = async () => {
   await blockModel.init();  
 };
 
-const transformBlockTxs = async (txs) => {
+/**
+ * 
+ * @param {Array of blockModel.transaction} txs 
+ * @return {Promise return Array of blockModel.transaction}
+ */
+const createTransactions = async (txs) => {
   return Promise.resolve(txs);
 };
 
-const addBlock = async (block, type, callback) => {
+/**
+ * @param {blockModel} block
+ * @param {function return Promise} afterSave
+ * @return {Promise}
+ * 
+ **/
+const saveBlock = async (block, afterSave = () => {}) => {
   if (block.txs) 
-    block.txs = await transformBlockTxs(block.txs);
+    block.txs = await createTransactions(block.txs);
   block = createBlock(block);
 
-  sem.take(async () => {
-    try {
-      await updateDbStateWithBlock(block);
-      
-      callback();
-    } catch (e) {
-      if (type === 1 && [1, 11000].includes(_.get(e, 'code'))) {
-        let lastCheckpointBlock = await blockModel.findOne({
-          number: {
-            $lte: block.number - 1,
-            $gte: block.number - 1 + config.consensus.lastBlocksValidateAmount
-          }
-        }, {}, {number: -1});
-        log.info(`wrong sync state!, rollback to ${lastCheckpointBlock.number - 1} block`);
-        await rollbackStateFromBlock(lastCheckpointBlock);
+  return new Promise(async (res) => {
+    sem.take(async () => {
+      try {
+        await updateDbStateWithBlock(block);
+        await afterSave(null);
+      } catch (e) {
+        await afterSave(e, null);
       }
-
-      callback(e, null);
-      log.error(e);
-    }
-
-    sem.leave();
+      sem.leave();
+      res();
+    });
   });
+};
 
+/**
+ * 
+ * @param {Number} startNumber 
+ * @param {Number} limit 
+ * @return {Promise}
+ */
+const removeBlocksForNumbers = async (startNumber, limit) => {
+  await blockModel.remove({
+    $or: [
+      {hash: {$lte: startNumber, $gte: startNumber - limit}},
+      {number: {$gte: startNumber}}
+    ]
+  });
 };
 
 const updateDbStateWithBlock = async (block) => {
-
   await blockModel.findOneAndUpdate({number: block.number}, block, {upsert: true});
   await blockModel.update({number: -1}, {
     $pull: {
@@ -116,40 +154,41 @@ const updateDbStateWithBlock = async (block) => {
       }
     }
   });
-
 };
 
-
-const rollbackStateFromBlock = async (block) => {
-
-  await blockModel.remove({
-    $or: [
-      {hash: {$lte: block.number, $gte: block.number - config.consensus.lastBlocksValidateAmount}},
-      {number: {$gte: block.number}}
-    ]
-  });
-};
-
+/**
+ * @return {Promise return Number}
+ */
 const findLastBlockNumber = async () => {
   return await blockModel.findOne({network: config.node.network}, {number: 1}, {sort: {number: -1}});
 };
 
+/**
+ * 
+ * @param {Array of Number} blockNumberChunk 
+ * @return {Promise return Array of blockModel}
+ */
 const countBlocksForNumbers = async (blockNumberChunk) => {
   return await blockModel.count({network: config.node.network, number: {$in: blockNumberChunk}});
 };
 
 
 module.exports = {
-  addBlock,
-  findLastBlocks,
-  getBlocksByHashes,
-  createBlock,
   initModels,
-  transformBlockTxs,
-  removeUnconfirmedBlock,
-  updateUnconfirmedBlock,
-  getUnconfirmedBlock,
+  
+  createBlock,
+  createTransactions,
 
+
+  findLastBlocks,
+  findBlocksByHashes,
   findLastBlockNumber,
-  countBlocksForNumbers
+  countBlocksForNumbers,
+
+  saveBlock,
+  removeBlocksForNumbers,
+
+  findUnconfirmedBlock,  
+  saveUnconfirmedBlock,   
+  removeUnconfirmedBlock  
 };

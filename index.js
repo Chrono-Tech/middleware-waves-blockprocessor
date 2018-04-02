@@ -19,8 +19,8 @@ const  filterTxsByAccountsService = require('./services/filterTxsByAccountsServi
   log = bunyan.createLogger({name: 'core.blockProcessor'}),
 
   NodeListenerService = require('./services/nodeListenerService'),  
-  finder = require('./services/blockFinderService'),
-  sender = require('./services/nodeSenderService'),
+  blockRepo = require('./services/blockRepository'),
+  requests = require('./services/nodeRequests'),
 
   W3CWebSocket = require('websocket').w3cwebsocket,
   WebSocketAsPromised = require('websocket-as-promised');
@@ -65,7 +65,7 @@ const init = async function () {
     channel = await amqpConn.createChannel();
   }
 
-  const syncCacheService = new SyncCacheService(sender, finder);
+  const syncCacheService = new SyncCacheService(requests, blockRepo);
 
 
   syncCacheService.events.on('block', async block => {
@@ -95,7 +95,7 @@ const init = async function () {
     });
   });
 
-  const blockWatchingService = new BlockWatchingService(sender, listener, finder, endBlock);
+  const blockWatchingService = new BlockWatchingService(requests, listener, blockRepo, endBlock);
 
   await blockWatchingService.startSync().catch(e => {
     log.error(`error starting cache service: ${e}`);

@@ -16,28 +16,28 @@ class SyncCacheService {
 
   /**
    * Creates an instance of SyncCacheService.
-   * @param {NodeSenderService} sender 
-   * @param {NodeFinderService} finder 
+   * @param {nodeRequests} requests
+   * @param {blockRepository} repo
    * 
    * @memberOf SyncCacheService
    */
-  constructor (sender, finder) {
-    this.sender = sender;
-    this.finder = finder;
+  constructor (requests, repo) {
+    this.requests = requests;
+    this.repo = repo;
     this.events = new EventEmitter();
     this.isSyncing = true;
   }
 
   async start () {
     await this.indexCollection();
-    let data = await allocateBlockBuckets(this.sender, this.finder);
+    let data = await allocateBlockBuckets(this.requests, this.repo);
     this.doJob(data.missedBuckets);
     return data.height;
   }
 
   async indexCollection () {
     log.info('indexing...');
-    await this.finder.initModels();
+    await this.repo.initModels();
     log.info('indexation completed!');
   }
 
@@ -73,7 +73,7 @@ class SyncCacheService {
         _.find(lockerChunks, lock => lock[0] === item[0])
       ).head().value();
 
-      let lastBlock = await this.sender.getBlockByNumber([_.last(newChunkToLock)]).catch(() => null);
+      let lastBlock = await this.requests.getBlockByNumber([_.last(newChunkToLock)]).catch(() => null);
       locker.lock = false;
       if (!newChunkToLock || !lastBlock) {
         delete locker.stack[index];
@@ -84,8 +84,8 @@ class SyncCacheService {
       log.info(`provider ${index} took chuck of blocks ${newChunkToLock[0]} - ${_.last(newChunkToLock)}`);
       locker.stack[index] = newChunkToLock;
       await Promise.mapSeries(newChunkToLock, async (blockNumber) => {
-        let block = await this.sender.getBlockByNumber(blockNumber);
-        await new Promise.promisify(this.finder.addBlock.bind(null, block, 0))();
+        let block = await this.requests.getBlockByNumber(blockNumber);
+        await new Promise.promisify(this.repo.saveBlock.bind(null, block))();
 
         _.pull(newChunkToLock, blockNumber);
         this.events.emit('block', block);

@@ -5,13 +5,13 @@ const _ = require('lodash'),
   log = bunyan.createLogger({name: 'app.utils.allocateBlockBuckets'});
 
 /**
- * @param {NodeFinderService} finder
- * @param {NodeSenderService} sender
+ * @param {../services/nodeRequests} requests
+ * @param {../services/blockrepository} repo 
  * 
  **/
-module.exports = async function (sender, finder) {
+module.exports = async function (requests, repo) {
 
-  const currentBlock = await finder.findLastBlockNumber();
+  const currentBlock = await repo.findLastBlockNumber();
   
   const currentCacheHeight = _.get(currentBlock, 'number', -1);
 
@@ -25,7 +25,7 @@ module.exports = async function (sender, finder) {
 
   for (let blockNumberChunk of blockNumberChunks) {
     log.info(`validating blocks from: ${_.head(blockNumberChunk)} to ${_.last(blockNumberChunk)}`);
-    const count = await finder.countBlocksForNumbers(blockNumberChunk);
+    const count = await repo.countBlocksForNumbers(blockNumberChunk);
     
     if (count !== blockNumberChunk.length && count)
       missedBuckets.push(blockNumberChunk);
@@ -38,12 +38,12 @@ module.exports = async function (sender, finder) {
     if (missedBucket.length)
       for (let blockNumber of missedBucket) {
         log.info(`validating block: ${blockNumber}`);
-        const isExist = await finder.countBlocksForNumbers([blockNumber]);
+        const isExist = await repo.countBlocksForNumbers([blockNumber]);
         if (!isExist)
           missedBlocks.push(blockNumber);
       }
 
-  let currentNodeHeight = await Promise.resolve(sender.getLastBlockNumber()).timeout(10000).catch(() => -1);
+  let currentNodeHeight = await Promise.resolve(requests.getLastBlockNumber()).timeout(10000).catch(() => -1);
 
   for (let i = currentCacheHeight + 1; i < currentNodeHeight - config.consensus.lastBlocksValidateAmount; i++)
     missedBlocks.push(i);
