@@ -43,7 +43,7 @@ describe('core/block processor', function () {
 
   it('send some waves from account0 to account1 and validate countMessages(2) and structure message', async () => {
 
-    const checkMessage = function (content) {
+    const checkMessage = (content) => {
       expect(content).to.contain.all.keys(
         'id',
         'signature',

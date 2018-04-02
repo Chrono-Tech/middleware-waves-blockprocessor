@@ -11,7 +11,7 @@ const _ = require('lodash'),
  **/
 module.exports = async function (sender, finder) {
 
-  const currentBlock = await finder.findAllBlockNumbers();
+  const currentBlock = await finder.findLastBlockNumber();
   
   const currentCacheHeight = _.get(currentBlock, 'number', -1);
 

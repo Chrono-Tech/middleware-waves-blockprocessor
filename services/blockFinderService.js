@@ -130,7 +130,7 @@ const rollbackStateFromBlock = async (block) => {
   });
 };
 
-const findAllBlockNumbers = async () => {
+const findLastBlockNumber = async () => {
   return await blockModel.findOne({network: config.node.network}, {number: 1}, {sort: {number: -1}});
 };
 
@@ -150,6 +150,6 @@ module.exports = {
   updateUnconfirmedBlock,
   getUnconfirmedBlock,
 
-  findAllBlockNumbers,
+  findLastBlockNumber,
   countBlocksForNumbers
 };
