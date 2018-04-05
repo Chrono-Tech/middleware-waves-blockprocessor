@@ -14,6 +14,7 @@ const privatePost = (query, body, apiKey) => makeRequest(query, 'POST', body, {
   'X-API-Key': apiKey
 });
 
+
 const makeRequest = (path, method, body, headers = {}) => {
   const options = {
     method,
@@ -24,6 +25,7 @@ const makeRequest = (path, method, body, headers = {}) => {
   };
   return request(options).catch(async (e) => await errorHandler(e));
 };
+
 
 const createBlock = (block) => {
   return _.merge(block, {
@@ -58,15 +60,15 @@ const getBlockByNumber = async (height) => {
 
 /**
  * 
- * @param {Array of String} hashes 
+ * @param {Array of Number} numbers 
  * @return {Promise return Object[]}
  */
-const getBlocksByHashes = async (hashes) => {
-  const blocks = await Promise.map(hashes, 
-    async blockHash => await get(`blocks/signature/${blockHash}`).catch(() => null)
+const getBlocksByNumbers = async (numbers) => {
+  const blocks = await Promise.map(numbers,
+    async blockNumber => await getBlockByNumber(blockNumber).catch(() => {}) 
   );
   return _.chain(blocks).filter(block => block && block.signature !== undefined)
-    .map(createBlock).value();
+    .value();
 };
 
 
@@ -102,7 +104,7 @@ const sendTransaction = async (apiKey, tx) => {
 
 module.exports = {
   getBlockByNumber,
-  getBlocksByHashes,
+  getBlocksByNumbers,
   getLastBlockNumber,
 
   //for tests only

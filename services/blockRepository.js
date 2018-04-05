@@ -2,7 +2,9 @@ const config = require('../config'),
   _ = require('lodash'),
   sem = require('semaphore')(1),
 
-  blockModel = require('../models/blockModel');
+  blockModel = require('../models/blockModel'),
+  bunyan = require('bunyan'),
+  log = bunyan.createLogger({name: 'app.services.blockRepository'});
 
 /**
  * @return {Promise return blockModels}
@@ -140,7 +142,7 @@ const removeBlocksForNumbers = async (startNumber, limit) => {
       {hash: {$lte: startNumber, $gte: startNumber - limit}},
       {number: {$gte: startNumber}}
     ]
-  });
+  }).catch(log.error);
 };
 
 const updateDbStateWithBlock = async (block) => {
@@ -153,7 +155,7 @@ const updateDbStateWithBlock = async (block) => {
         }
       }
     }
-  });
+  }).catch(log.error);
 };
 
 /**

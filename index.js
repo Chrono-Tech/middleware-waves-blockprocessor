@@ -14,7 +14,7 @@ const  filterTxsByAccountsService = require('./services/filterTxsByAccountsServi
   amqp = require('amqplib'),
   bunyan = require('bunyan'),
   _ = require('lodash'),
-  BlockWatchingService = require('./services/blockWatchingService'),
+  WavesBlockWatchingService = require('./services/wavesBlockWatchingService'),
   SyncCacheService = require('./services/syncCacheService'),
   log = bunyan.createLogger({name: 'core.blockProcessor'}),
 
@@ -66,6 +66,7 @@ const init = async function () {
   }
 
   const syncCacheService = new SyncCacheService(requests, blockRepo);
+  syncCacheService.startIndex = 1;
 
 
   syncCacheService.events.on('block', async block => {
@@ -95,7 +96,7 @@ const init = async function () {
     });
   });
 
-  const blockWatchingService = new BlockWatchingService(requests, listener, blockRepo, endBlock);
+  const blockWatchingService = new WavesBlockWatchingService(requests, listener, blockRepo, endBlock);
 
   await blockWatchingService.startSync().catch(e => {
     log.error(`error starting cache service: ${e}`);

@@ -25,12 +25,14 @@ class SyncCacheService {
     this.requests = requests;
     this.repo = repo;
     this.events = new EventEmitter();
+    this.startIndex = 0;
     this.isSyncing = true;
   }
 
   async start () {
     await this.indexCollection();
-    let data = await allocateBlockBuckets(this.requests, this.repo);
+    let data = await allocateBlockBuckets(this.requests, this.repo, this.startIndex);
+    
     this.doJob(data.missedBuckets);
     return data.height;
   }
@@ -61,7 +63,9 @@ class SyncCacheService {
 
   async runPeer (buckets, locker, index) {
 
+    
     while (buckets.length) {
+      
       if (locker.lock) {
         await Promise.delay(1000);
         continue;
@@ -73,28 +77,28 @@ class SyncCacheService {
         _.find(lockerChunks, lock => lock[0] === item[0])
       ).head().value();
 
-      let lastBlock = await this.requests.getBlockByNumber([_.last(newChunkToLock)]).catch(() => null);
+      let lastBlock = await this.requests.getBlockByNumber(_.last(newChunkToLock)).catch(() => {});
       locker.lock = false;
-      if (!newChunkToLock || !lastBlock) {
+      if (!newChunkToLock || !lastBlock || !lastBlock.height) {
         delete locker.stack[index];
         await Promise.delay(10000);
         continue;
       }
-
       log.info(`provider ${index} took chuck of blocks ${newChunkToLock[0]} - ${_.last(newChunkToLock)}`);
       locker.stack[index] = newChunkToLock;
       await Promise.mapSeries(newChunkToLock, async (blockNumber) => {
         let block = await this.requests.getBlockByNumber(blockNumber);
-        await new Promise.promisify(this.repo.saveBlock.bind(null, block))();
-
+        if (!block || !block.hash) 
+          return Promise.reject('not find block for number=' + blockNumber);
+        
+        await this.repo.saveBlock(block);
         _.pull(newChunkToLock, blockNumber);
-        this.events.emit('block', block);
+        this.events.emit('block', this.repo.createBlock(block));
       }).catch((e) => {
         if (e && e.code === 11000)
           return _.pull(newChunkToLock, newChunkToLock[0]);
         log.error(e);
       });
-
       if (!newChunkToLock.length)
         _.pull(buckets, newChunkToLock);
 
