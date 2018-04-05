@@ -4,7 +4,7 @@ const request = require('request-promise'),
   {URL} = require('url'),
   bunyan = require('bunyan'),
   Promise = require('bluebird'),
-  log = bunyan.createLogger({name: 'wavesBlockprocessor.nodeSenderService'});
+  log = bunyan.createLogger({name: 'app.services.nodeSenderService'});
 
 
 
