@@ -106,8 +106,9 @@ const init = async function () {
   blockWatchingService.events.on('block', async block => {
     log.info(`${block.hash} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountsService(block.transactions);
-    await Promise.all(filtered.map(item =>
+    await Promise.all(filtered.map(item => {
       channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))))
+    }
     ));
   });
 

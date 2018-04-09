@@ -51,7 +51,7 @@ describe('core/block processor', function () {
         'type',
         'sender',
         'recipient',
-        'amount',
+        'amount'
       );
       expect(content.sender).to.equal(accounts[0]);
       expect(content.recipient).to.equal(accounts[1]);
