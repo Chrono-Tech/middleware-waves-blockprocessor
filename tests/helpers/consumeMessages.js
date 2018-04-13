@@ -19,7 +19,6 @@ module.exports = async (maxCount = 1, channel, parseMessage, queueName = `app_${
         res();
       } else {
         messageCount++;
-        await channel.ack(message);        
       }
     };
 

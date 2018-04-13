@@ -12,7 +12,6 @@ module.exports = async (maxCount = 1, client, parseMessage) => {
     const updateMessage = async (message) => {
       if (messageCount === maxCount) {
         await subscriber.unsubscribe();
-        await message.ack();        
         res();
       } else
         messageCount++;
