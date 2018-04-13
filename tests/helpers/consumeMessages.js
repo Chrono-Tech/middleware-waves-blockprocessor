@@ -21,12 +21,11 @@ module.exports = async (maxCount = 1, channel, parseMessage, queueName = `app_${
         messageCount++;
         await channel.ack(message);        
       }
-    }
+    };
 
     channel.consume(queueName, async (message) => {
-      if (parseMessage(message)) {
+      if (parseMessage(message))
         await updateMessage(message);
-      }
     }, {noAck: true});
   });
 };

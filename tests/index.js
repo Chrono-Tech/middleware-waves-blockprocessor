@@ -78,10 +78,9 @@ describe('core/block processor', function () {
         const channel = await amqpInstance.createChannel();  
         await connectToQueue(channel);
         return await consumeMessages(1, channel, (message) => {
-          content = JSON.parse(message.content);
-          if (content.id === tx.id) {
+          const content = JSON.parse(message.content);
+          if (content.id === tx.id)
             return checkMessage(content);
-          }
           return false;
         });
       })(),
@@ -89,10 +88,9 @@ describe('core/block processor', function () {
         const ws = new WebSocket('ws://localhost:15674/ws');
         const client = Stomp.over(ws, {heartbeat: false, debug: false});
         return await consumeStompMessages(1, client, (message) => {
-          content = JSON.parse(message.body);
-          if (content.id === tx.id) {
+          const content = JSON.parse(message.body);
+          if (content.id === tx.id)
             return checkMessage(content);
-          }
           return false;
         });
       })()
@@ -112,10 +110,9 @@ describe('core/block processor', function () {
         const channel = await amqpInstance.createChannel();  
         await connectToQueue(channel);
         return await consumeMessages(1, channel, (message) => {
-          content = JSON.parse(message.content);
-          if (content.id === tx.id) {
+          const content = JSON.parse(message.content);
+          if (content.id === tx.id)
             return checkMessage(content);
-          }
           return false;
         });
       })(),
@@ -123,10 +120,9 @@ describe('core/block processor', function () {
         const ws = new WebSocket('ws://localhost:15674/ws');
         const client = Stomp.over(ws, {heartbeat: false, debug: false});
         return await consumeStompMessages(1, client, (message) => {
-          content = JSON.parse(message.body);
-          if (content.id === tx.id) {
+          const content = JSON.parse(message.body);
+          if (content.id === tx.id)
             return checkMessage(content);
-          }
           return false;
         });
       })()
