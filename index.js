@@ -1,109 +1,122 @@
 /**
  * Middleware service for handling emitted events on chronobank platform
- * @module Chronobank/eth-blockprocessor
- * @requires config
- * @requires models/blockModel
- * @requires services/blockProcessService
+ * @module Chronobank/waves-blockprocessor
  */
-
 const mongoose = require('mongoose'),
   config = require('./config'),
-  blockModel = require('./models/blockModel'),
-  _ = require('lodash'),
-  bunyan = require('bunyan'),
-  amqp = require('amqplib'),
-  Promise = require('bluebird'),
-  requestErrors = require('request-promise-core/errors'),
-  log = bunyan.createLogger({name: 'app'}),
-  blockProcessService = require('./services/blockProcessService');
+  Promise = require('bluebird');
 
 mongoose.Promise = Promise;
-mongoose.connect(config.mongo.uri, {useMongoClient: true});
+mongoose.connect(config.mongo.data.uri, {useMongoClient: true});
+mongoose.accounts = mongoose.createConnection(config.mongo.accounts.uri, {useMongoClient: true});
 
-mongoose.connection.on('disconnected', function () {
-  log.error('mongo disconnected!');
-  process.exit(0);
-});
+const  filterTxsByAccountsService = require('./services/filterTxsByAccountsService'),
+  amqp = require('amqplib'),
+  bunyan = require('bunyan'),
+  _ = require('lodash'),
+  BlockWatchingService = require('./services/blockWatchingService'),
+  SyncCacheService = require('./services/syncCacheService'),
+  log = bunyan.createLogger({name: 'core.blockProcessor'}),
 
-const init = async () => {
+  NodeListenerService = require('./services/nodeListenerService'),  
+  finder = require('./services/blockFinderService'),
+  sender = require('./services/nodeSenderService'),
 
-  let currentBlock = await blockModel.findOne({network: config.waves.network}).sort('-block');
-  let wrongAttempts = 0;
-  currentBlock = _.chain(currentBlock).get('block', 0).add(0).value();
-  log.info(`search from block:${currentBlock} for network ${config.waves.network}`);
+  W3CWebSocket = require('websocket').w3cwebsocket,
+  WebSocketAsPromised = require('websocket-as-promised');
 
-  let amqpInstance = await amqp.connect(config.rabbit.url)
+/**
+ * @module entry point
+ * @description process blocks, and notify, through rabbitmq, other
+ * services about new block or tx, where we meet registered address
+ */
+
+[mongoose.accounts, mongoose.connection].forEach(connection =>
+  connection.on('disconnected', function () {
+    log.error('mongo disconnected!');
+    process.exit(0);
+  })
+);
+
+const wsp = new WebSocketAsPromised(config.node.ws, {
+    createWebSocket: url => new W3CWebSocket(url)
+  }),
+  listener = new NodeListenerService(wsp);
+
+const init = async function () {
+
+  let amqpConn = await amqp.connect(config.rabbit.url)
     .catch(() => {
-      log.error('rabbitmq process has finished!');
+      log.error('rabbitmq is not available!');
       process.exit(0);
     });
 
-  let channel = await amqpInstance.createChannel();
+  let channel = await amqpConn.createChannel();
 
   channel.on('close', () => {
     log.error('rabbitmq process has finished!');
     process.exit(0);
   });
 
-  await channel.assertExchange('events', 'topic', {durable: false});
+  try {
+    await channel.assertExchange('events', 'topic', {durable: false});
+  } catch (e) {
+    log.error(e);
+    channel = await amqpConn.createChannel();
+  }
 
-  /**
-     * Recursive routine for processing incoming blocks.
-     * @return {undefined}
-     */
-  let processBlock = async () => {
-    try {
-      let result = await Promise.resolve(blockProcessService(currentBlock)).timeout(20000);
-
-      for (let tx of result.filteredTxs) {
-        let addresses = _.chain([tx.sender, tx.recipient])
-          .compact()
-          .uniq()
-          .value();
-
-        for (let address of addresses)
-          await channel.publish('events', `${config.rabbit.serviceName}_transaction.${address}`, new Buffer(JSON.stringify(tx)));
-      }
-
-      await blockModel.findOneAndUpdate({network: config.waves.network}, {
-        $set: {
-          block: currentBlock,
-          created: Date.now()
-        }
-      }, {upsert: true});
-
-      wrongAttempts = 0;
-      currentBlock = result.block;
-      processBlock();
-    } catch (err) {
-
-      if (err instanceof Promise.TimeoutError)
-        return processBlock();
+  const syncCacheService = new SyncCacheService(sender, finder);
 
 
+  syncCacheService.events.on('block', async block => {
+    log.info(`${block.hash} (${block.number}) added to cache.`);
+    let filtered = await filterTxsByAccountsService(block.transactions);
+    await Promise.all(filtered.map(item =>
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))))
+    ));
+  });
+
+  let endBlock = await syncCacheService.start()
+    .catch((err) => {
       if (_.get(err, 'code') === 0) {
-        log.info(`await for next block ${currentBlock}`);
-        return setTimeout(processBlock, 10000);
-      }
-
-      if(err instanceof requestErrors.RequestError) {
-        if(wrongAttempts < 3) {
-          log.info(`node is not available, retrying ${wrongAttempts + 1} of 3 times`);
-          wrongAttempts++;
-          return setTimeout(processBlock, 10000);
-        }
-        log.info('node is not available!');
+        log.info('nodes are down or not synced!');
         process.exit(0);
       }
+      log.error(err);
+    });
 
-      currentBlock++;
-      processBlock();
-    }
-  };
+  await new Promise((res) => {
+    if (config.sync.shadow)
+      return res();
 
-  processBlock();
+    syncCacheService.events.on('end', () => {
+      log.info(`cached the whole blockchain up to block: ${endBlock}`);
+      res();
+    });
+  });
 
-}
-;
+  const blockWatchingService = new BlockWatchingService(sender, listener, finder, endBlock);
+
+  await blockWatchingService.startSync().catch(e => {
+    log.error(`error starting cache service: ${e}`);
+    process.exit(0);
+  });
+
+  blockWatchingService.events.on('block', async block => {
+    log.info(`${block.hash} (${block.number}) added to cache.`);
+    let filtered = await filterTxsByAccountsService(block.transactions);
+    await Promise.all(filtered.map(item =>
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))))
+    ));
+  });
+
+  blockWatchingService.events.on('tx', async (tx) => {
+    let filtered = await filterTxsByAccountsService([tx]);
+    await Promise.all(filtered.map(item =>
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: -1}))))
+    ));
+  });
+
+};
 
 module.exports = init();
