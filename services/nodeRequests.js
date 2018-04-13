@@ -1,3 +1,9 @@
+/**
+ * 
+ * Copyright 2017–2018, LaborX PTY
+ * Licensed under the AGPL Version 3 license.
+ * @author Kirill Sergeev <cloudkserg11@gmail.com>
+ */
 const request = require('request-promise'),
   config = require('../config'),
   _ = require('lodash'),
@@ -7,13 +13,7 @@ const request = require('request-promise'),
   log = bunyan.createLogger({name: 'app.services.nodeSenderService'});
 
 
-
-
 const get = query => makeRequest(query, 'GET');
-const privatePost = (query, body, apiKey) => makeRequest(query, 'POST', body, {
-  'X-API-Key': apiKey
-});
-
 
 const makeRequest = (path, method, body, headers = {}) => {
   const options = {
@@ -72,42 +72,9 @@ const getBlocksByNumbers = async (numbers) => {
 };
 
 
-/**
- * 
- * @param {String} apiKey 
- * @param {String} toAddress 
- * @param {Number} amount 
- * @param {String} fromAddress 
- * @return {Promise return Object}
- */
-const signTransaction = async (apiKey, toAddress, amount, fromAddress) => {
-  return await privatePost('transactions/sign', {
-    type: 4,
-    sender: fromAddress,
-    recipient: toAddress,
-    amount: amount,
-    fee: 100000,
-    attachment: 'string'
-  }, apiKey);
-};
-
-/**
- * only for test
- * @param {String} apiKey 
- * @param {Object} tx 
- * @return {Promise}
- */
-const sendTransaction = async (apiKey, tx) => {
-  return await privatePost('transactions/broadcast', tx, apiKey);
-};
-
 
 module.exports = {
   getBlockByNumber,
   getBlocksByNumbers,
-  getLastBlockNumber,
-
-  //for tests only
-  signTransaction,
-  sendTransaction,
+  getLastBlockNumber
 };

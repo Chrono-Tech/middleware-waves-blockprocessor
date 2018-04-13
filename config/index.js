@@ -29,7 +29,6 @@ const config = {
   },
   node: {
     rpc: process.env.RPC || 'http://localhost:6869',
-    ws: process.env.WS || 'ws://ws.wavesplatform.com/api',
     network: process.env.NETWORK || 'testnet',
     blockGenerationTime: process.env.BLOCK_GENERATION_TIME || 60
   }

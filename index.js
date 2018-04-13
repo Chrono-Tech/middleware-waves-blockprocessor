@@ -1,6 +1,10 @@
 /**
  * Middleware service for handling emitted events on chronobank platform
  * @module Chronobank/waves-blockprocessor
+ * 
+ * Copyright 2017–2018, LaborX PTY
+ * Licensed under the AGPL Version 3 license.
+ * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
 const mongoose = require('mongoose'),
   config = require('./config'),
@@ -20,10 +24,7 @@ const  filterTxsByAccountsService = require('./services/filterTxsByAccountsServi
 
   NodeListenerService = require('./services/nodeListenerService'),  
   blockRepo = require('./services/blockRepository'),
-  requests = require('./services/nodeRequests'),
-
-  W3CWebSocket = require('websocket').w3cwebsocket,
-  WebSocketAsPromised = require('websocket-as-promised');
+  requests = require('./services/nodeRequests');
 
 /**
  * @module entry point
@@ -38,10 +39,7 @@ const  filterTxsByAccountsService = require('./services/filterTxsByAccountsServi
   })
 );
 
-const wsp = new WebSocketAsPromised(config.node.ws, {
-    createWebSocket: url => new W3CWebSocket(url)
-  }),
-  listener = new NodeListenerService(wsp);
+const listener = new NodeListenerService();
 
 const init = async function () {
 
@@ -107,7 +105,7 @@ const init = async function () {
     log.info(`${block.hash} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountsService(block.transactions);
     await Promise.all(filtered.map(item => {
-      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))))
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))));
     }
     ));
   });

@@ -8,7 +8,6 @@
     "bluebird": "^3.5.0",
     "bunyan": "^1.8.10",
     "bytebuffer": "^5.0.1",
-    "curve25519-js": "git+https://github.com/wavesplatform/curve25519-js",
     "dotenv": "^4.0.0",
     "lodash": "^4.17.4",
     "mongoose": "^4.11.11",
