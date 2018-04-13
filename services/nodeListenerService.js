@@ -33,7 +33,7 @@ class NodeListenerService {
 
 
   async stop () {
-    await this.wsp.send('{"op":"unseubscribe all"}');
+    await this.wsp.send('{"op":"unsubscribe all"}');
     await this.wsp.close();
   }
 }

@@ -23,7 +23,7 @@ before_script:
     - cd $TRAVIS_BUILD_DIR/tests/node && java -jar waves.jar waves-devnet.conf > /dev/null &
     - cd $TRAVIS_BUILD_DIR && pm2 start index.js
 script:
-  - sleep 120 && npm test -- --coverage
+  - sleep 200 && npm test -- --coverage
 
 after_script:
   - pm2 logs --nostream
