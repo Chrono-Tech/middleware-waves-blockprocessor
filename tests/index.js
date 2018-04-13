@@ -17,7 +17,7 @@ const expect = require('chai').expect,
   clearQueues = require('./helpers/clearQueues'),
   consumeMessages = require('./helpers/consumeMessages'),
   consumeStompMessages = require('./helpers/consumeStompMessages'),
-  sender = require('../services/nodeSenderService'),
+  requests = require('../services/nodeRequests'),
   Stomp = require('webstomp-client');
 
 let accounts, amqpInstance;
@@ -43,7 +43,7 @@ describe('core/block processor', function () {
 
   it('send some waves from account0 to account1 and validate countMessages(2) and structure message', async () => {
 
-    const checkMessage = function (content) {
+    const checkMessage = (content) => {
       expect(content).to.contain.all.keys(
         'id',
         'signature',
@@ -51,19 +51,19 @@ describe('core/block processor', function () {
         'type',
         'sender',
         'recipient',
-        'amount',
+        'amount'
       );
       expect(content.sender).to.equal(accounts[0]);
       expect(content.recipient).to.equal(accounts[1]);
       expect(content.id).to.equal(transferTx.id);
     };
 
-    const transferTx = await sender.signTransaction(
+    const transferTx = await requests.signTransaction(
       config.dev.apiKey, accounts[1], 100, accounts[0]);
 
     return await Promise.all([
       (async() => {
-         await sender.sendTransaction(config.dev.apiKey, transferTx);
+         await requests.sendTransaction(config.dev.apiKey, transferTx);
       })(),
       (async () => {
         const channel = await amqpInstance.createChannel();  
@@ -85,12 +85,12 @@ describe('core/block processor', function () {
 
   it('del account and send some waves from account1 to account2 and validate that zero messages', async () => {
     await accountModel.remove();
-    const transferTx = await sender.signTransaction(
+    const transferTx = await requests.signTransaction(
       config.dev.apiKey, accounts[1], 100, accounts[0]);
 
     return await Promise.all([
       (async() => {
-         await sender.sendTransaction(config.dev.apiKey, transferTx);
+         await requests.sendTransaction(config.dev.apiKey, transferTx);
       })(),
       (async () => {
         await Promise.delay(12000);

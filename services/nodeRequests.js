@@ -4,7 +4,7 @@ const request = require('request-promise'),
   {URL} = require('url'),
   bunyan = require('bunyan'),
   Promise = require('bluebird'),
-  log = bunyan.createLogger({name: 'wavesBlockprocessor.nodeSenderService'});
+  log = bunyan.createLogger({name: 'app.services.nodeSenderService'});
 
 
 
@@ -13,6 +13,7 @@ const get = query => makeRequest(query, 'GET');
 const privatePost = (query, body, apiKey) => makeRequest(query, 'POST', body, {
   'X-API-Key': apiKey
 });
+
 
 const makeRequest = (path, method, body, headers = {}) => {
   const options = {
@@ -24,6 +25,7 @@ const makeRequest = (path, method, body, headers = {}) => {
   };
   return request(options).catch(async (e) => await errorHandler(e));
 };
+
 
 const createBlock = (block) => {
   return _.merge(block, {
@@ -38,27 +40,46 @@ const errorHandler = async (err) => {
 };
 
 
+/**
+ * @return {Promise return Number}
+ */
 const getLastBlockNumber = async () => {
   const result = await get('/blocks/height');
   return ((result.height && result.height > 0) ? result.height : 0);
 };
 
+/**
+ * 
+ * @param {Number} height 
+ * @return {Promise return Object}
+ */
 const getBlockByNumber = async (height) => {
   const block = await get(`/blocks/at/${height}`);
   return createBlock(block); 
 };
-const getBlocksByHashes = async (hashes) => {
-  const blocks = await Promise.map(hashes, 
-    async blockHash => await get(`blocks/signature/${blockHash}`).catch(() => null)
+
+/**
+ * 
+ * @param {Array of Number} numbers 
+ * @return {Promise return Object[]}
+ */
+const getBlocksByNumbers = async (numbers) => {
+  const blocks = await Promise.map(numbers,
+    async blockNumber => await getBlockByNumber(blockNumber).catch(() => {}) 
   );
   return _.chain(blocks).filter(block => block && block.signature !== undefined)
-    .map(createBlock).value();
+    .value();
 };
 
 
-
-const getAccount = async (address) => await get(`/account/get?address=${address}`);
-const getUnconfirmedTransactions = async (address) => await get(`/account/unconfirmedTransactions?address=${address}`);
+/**
+ * 
+ * @param {String} apiKey 
+ * @param {String} toAddress 
+ * @param {Number} amount 
+ * @param {String} fromAddress 
+ * @return {Promise return Object}
+ */
 const signTransaction = async (apiKey, toAddress, amount, fromAddress) => {
   return await privatePost('transactions/sign', {
     type: 4,
@@ -70,18 +91,23 @@ const signTransaction = async (apiKey, toAddress, amount, fromAddress) => {
   }, apiKey);
 };
 
+/**
+ * only for test
+ * @param {String} apiKey 
+ * @param {Object} tx 
+ * @return {Promise}
+ */
 const sendTransaction = async (apiKey, tx) => {
   return await privatePost('transactions/broadcast', tx, apiKey);
 };
 
 
 module.exports = {
-  getAccount,
-  getUnconfirmedTransactions,
+  getBlockByNumber,
+  getBlocksByNumbers,
+  getLastBlockNumber,
+
+  //for tests only
   signTransaction,
   sendTransaction,
-
-  getBlockByNumber,
-  getBlocksByHashes,
-  getLastBlockNumber
 };
