@@ -18,10 +18,10 @@ const Account = new mongoose.Schema({
     required: true,
     validate: [a=>  /^[0-9a-zA-Z]{35}$/.test(a), messages.wrongAddress]
   },
+  assets: {type: mongoose.Schema.Types.Mixed, default: {}},
   balance: {type: mongoose.Schema.Types.Long, default: 0},
   isActive: {type: Boolean, required: true, default: true},
   created: {type: Date, required: true, default: Date.now},
-  assetId : {type: mongoose.Schema.Types.String, default: ''}
 });
 
 module.exports = mongoose.accounts.model(`${config.mongo.accounts.collectionPrefix}Account`, Account);

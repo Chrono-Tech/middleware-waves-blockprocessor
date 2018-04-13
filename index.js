@@ -14,13 +14,13 @@ const  filterTxsByAccountsService = require('./services/filterTxsByAccountsServi
   amqp = require('amqplib'),
   bunyan = require('bunyan'),
   _ = require('lodash'),
-  BlockWatchingService = require('./services/blockWatchingService'),
+  WavesBlockWatchingService = require('./services/wavesBlockWatchingService'),
   SyncCacheService = require('./services/syncCacheService'),
   log = bunyan.createLogger({name: 'core.blockProcessor'}),
 
   NodeListenerService = require('./services/nodeListenerService'),  
-  finder = require('./services/blockFinderService'),
-  sender = require('./services/nodeSenderService'),
+  blockRepo = require('./services/blockRepository'),
+  requests = require('./services/nodeRequests'),
 
   W3CWebSocket = require('websocket').w3cwebsocket,
   WebSocketAsPromised = require('websocket-as-promised');
@@ -65,7 +65,8 @@ const init = async function () {
     channel = await amqpConn.createChannel();
   }
 
-  const syncCacheService = new SyncCacheService(sender, finder);
+  const syncCacheService = new SyncCacheService(requests, blockRepo);
+  syncCacheService.startIndex = 1;
 
 
   syncCacheService.events.on('block', async block => {
@@ -95,7 +96,7 @@ const init = async function () {
     });
   });
 
-  const blockWatchingService = new BlockWatchingService(sender, listener, finder, endBlock);
+  const blockWatchingService = new WavesBlockWatchingService(requests, listener, blockRepo, endBlock);
 
   await blockWatchingService.startSync().catch(e => {
     log.error(`error starting cache service: ${e}`);
@@ -105,8 +106,9 @@ const init = async function () {
   blockWatchingService.events.on('block', async block => {
     log.info(`${block.hash} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountsService(block.transactions);
-    await Promise.all(filtered.map(item =>
+    await Promise.all(filtered.map(item => {
       channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))))
+    }
     ));
   });
 
