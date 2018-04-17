@@ -41,10 +41,15 @@ after_success:
     elif [ "$TRAVIS_TAG" != "" ]; then
       IMAGE_TAG_NAME="develop"
     fi;
-  - docker build --quiet -t gcr.io/deep-wares-144610/middleware-waves:$IMAGE_TAG_NAME .
-  - docker push gcr.io/deep-wares-144610/middleware-waves:$IMAGE_TAG_NAME
-
-
+  - IMAGE_TAG_NAME="latest"
+  - |
+    if [ "$TRAVIS_BRANCH" == "master" ]; then
+      docker build --quiet -t gcr.io/deep-wares-144610/$TRAVIS_BRANCH/middleware-waves:$IMAGE_TAG_NAME --build-arg RELEASE=latest .
+      docker push gcr.io/deep-wares-144610/$TRAVIS_BRANCH/middleware-waves:$IMAGE_TAG_NAME
+    elif [ "$TRAVIS_BRANCH" == "develop" ]; then
+      docker build --quiet -t gcr.io/deep-wares-144610/$TRAVIS_BRANCH/middleware-waves:$IMAGE_TAG_NAME --build-arg RELEASE=develop .
+      docker push gcr.io/deep-wares-144610/$TRAVIS_BRANCH/middleware-waves:$IMAGE_TAG_NAME
+    fi;
 
 notifications:
   email: false
