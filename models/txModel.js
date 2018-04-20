@@ -13,7 +13,7 @@ const mongoose = require('mongoose'),
 
 const TX = new mongoose.Schema({
   blockNumber: {type: Number, required: true, index: true, default: -1},
-  timeStamp: {type: Number, required: true, index: true, default: Date.now},  
+  timestamp: {type: Number, required: true, index: true, default: Date.now},  
   
   amount: {type: Number, index: true}, 
   hash: {type: String, index: true, unique: true}, //signature in block waves
@@ -21,7 +21,6 @@ const TX = new mongoose.Schema({
   id: {type: String},
   signature: {type: String},    
   'type': {type: String},
-  timestamp: {type: Date},    
 
   recipient: {type: String, index: true},
   sender: {type: String, index: true},
