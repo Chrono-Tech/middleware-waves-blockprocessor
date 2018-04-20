@@ -17,6 +17,7 @@
     "require-all": "^2.2.0",
     "semaphore": "^1.1.0",
     "tweetnacl": "^1.0.0",
+    "uniqid": "^4.1.1",
     "websocket": "^1.0.25",
     "websocket-as-promised": "^0.6.0",
     "ws": "^5.1.0"

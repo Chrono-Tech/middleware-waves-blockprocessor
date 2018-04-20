@@ -5,7 +5,6 @@
  * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
 const request = require('request-promise'),
-  config = require('../config'),
   {URL} = require('url'),
   _ = require('lodash'),
   bunyan = require('bunyan'),
@@ -13,40 +12,14 @@ const request = require('request-promise'),
   log = bunyan.createLogger({name: 'app.services.nodeListenerService'}),
   TIMEOUT_WAIT = 1000;
 
-
-const get = query => makeRequest(query, 'GET');
-
-const makeRequest = (path, method, body, headers = {}) => {
-  const options = {
-    method,
-    body,
-    uri: new URL(path, config.node.rpc),
-    json: true,
-    headers
-  };
-  return request(options).catch(async (e) => await errorHandler(e));
-};
-
-
-const errorHandler = async (err) => {
-  if (err.name && err.name === 'StatusCodeError')
-    await Promise.delay(10000);
-  log.error(err);
-};
-
 /**
  * 
- * @return {Promise return [Object] transactions}
+ * @class NodeListenerService
  */
-const getUnconfirmedTransactions = async () => {
-  return await get('/transactions/unconfirmed');
-};
-
-
-
 class NodeListenerService {
 
-  constructor () {
+  constructor (providerService) {
+    this.providerService = providerService;
     this.parsedTxs = [];
   }
 
@@ -59,6 +32,10 @@ class NodeListenerService {
     return newTxs;
   }
 
+  async start () {
+    
+  }
+
   /**
    * 
    * @param {any} callback function (tx)
@@ -67,7 +44,7 @@ class NodeListenerService {
    */
   async onMessage (callback) {
     this.intervalListener = setInterval(async () => {
-      const txs = this.onlyNew(await getUnconfirmedTransactions());
+      const txs = this.onlyNew(await this.getUnconfirmedTransactions());
       await Promise.map(txs, callback);
     }, TIMEOUT_WAIT);
   }
@@ -75,6 +52,37 @@ class NodeListenerService {
 
   async stop () {
     clearInterval(this.intervalListener);
+  }
+
+  get (url) {
+    return this.makeRequest(url, 'GET');
+  }
+
+  makeRequest (url, method, body) {
+    const options = {
+      method,
+      body,
+      uri: url,
+      json: true
+    };
+    return request(options).catch(this.onError.bind(this));
+  }
+
+  async onError (err) {
+    log.error(err);
+    const provider = this.providerService.getProvider();
+    this.providerService.disableProvider(provider);
+  }
+
+  /**
+   * 
+   * @return {Promise return [Object] transactions}
+   */
+  async getUnconfirmedTransactions () {
+    const provider = await this.providerService.getProvider();
+    return await this.get(
+      new URL('/transactions/unconfirmed', provider.getHttp())
+    );
   }
 }
 

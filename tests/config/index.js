@@ -9,6 +9,7 @@ const config = require('../../config');
 
 config['dev'] = {
   'apiKey': 'password',
+  providerForTest: process.env.PROVIDER_FOR_TEST || 'http://localhost:6869',
   'accounts':  [
     '3JfE6tjeT7PnpuDQKxiVNLn4TJUFhuMaaT5',
     '3Jk2fh8aMBmhCQCkBcUfKBSEEa3pDMkDjCr'

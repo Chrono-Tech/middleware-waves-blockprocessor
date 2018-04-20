@@ -5,76 +5,127 @@
  * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
 const request = require('request-promise'),
-  config = require('../config'),
   _ = require('lodash'),
   {URL} = require('url'),
-  bunyan = require('bunyan'),
-  Promise = require('bluebird'),
-  log = bunyan.createLogger({name: 'app.services.nodeSenderService'});
+  Promise = require('bluebird');
 
+const EMPTY_HEIGHT = -1;
 
-const get = query => makeRequest(query, 'GET');
+const get = (url) => {
+  return makeRequest(url, 'GET');
+};
 
-const makeRequest = (path, method, body, headers = {}) => {
+const makeRequest = (url, method, body, headers = {}) => {
   const options = {
     method,
     body,
-    uri: new URL(path, config.node.rpc),
+    uri: url,
     json: true,
     headers
   };
-  return request(options).catch(async (e) => await errorHandler(e));
+  return request(options);
 };
 
-
-const createBlock = (block) => {
-  return _.merge(block, {
-    hash: block.signature
-  });
+const createUrl = (providerUri, path) => {
+  return new URL(path, providerUri);
 };
-
-const errorHandler = async (err) => {
-  if (err.name && err.name === 'StatusCodeError')
-    await Promise.delay(10000);
-  log.error(err);
-};
-
 
 /**
+ * @param {String} providerUri
  * @return {Promise return Number}
  */
-const getLastBlockNumber = async () => {
-  const result = await get('/blocks/height');
-  return ((result.height && result.height > 0) ? result.height : 0);
+const getHeightForProvider = async (providerUri) => {
+  const result = await new Promise(async res => {
+    res(await get(createUrl(providerUri, '/blocks/height')).catch(() => {}));
+  }).timeout(10000).catch(()=> {});
+  return ((result.height && result.height > 0) ? result.height : EMPTY_HEIGHT);
 };
+
+
 
 /**
  * 
- * @param {Number} height 
- * @return {Promise return Object}
+ * @param {ProviderService} providerService 
+ * @return {Object with functions}
  */
-const getBlockByNumber = async (height) => {
-  const block = await get(`/blocks/at/${height}`);
-  return createBlock(block); 
+const createInstance = (providerService) => {
+  
+  const createProviderUrl = async (path) => {
+    const provider = await providerService.getProvider();
+    return createUrl(provider.getHttp(), path);
+  };
+
+  const getInstance = async (path, body) => {
+    const providerUrl = await createProviderUrl(path);
+    return await makeRequest(providerUrl, 'GET', body);
+  };
+
+  return {
+    /**
+     * @param {Object} block 
+     * @returns {Object}
+     */
+    createBlock (block) {
+      if (!block.height) 
+        return {};
+      return _.merge(block, {
+        hash: block.signature
+      });
+    },
+    
+    /**
+     * 
+     * @param {Number} height 
+     * @return {Promise return Object}
+     */
+    async getBlockByNumber (height) {
+      const block = await getInstance(`/blocks/at/${height}`)
+        .catch(async () => {
+          await this.onError();
+          return {};
+        });
+
+      if (!block.height) 
+        return {};
+      return this.createBlock(block); 
+    },
+
+    /**
+     * @return {Promise return Number}
+     */
+    async getLastBlockNumber () {
+      const provider = await providerService.getProvider();
+      return await getHeightForProvider(provider.getHttp());
+    },
+
+    async onError () {
+      const provider = await providerService.getProvider();
+      providerService.disableProvider(provider);
+      await providerService.selectProvider();
+    },
+    
+    
+    
+    /**
+     * 
+     * @param {Array of Number} numbers 
+     * @return {Promise return Object[]}
+     */
+    async getBlocksByNumbers (numbers) {
+      return _.filter(
+        await Promise.map(numbers, 
+          async (number) => await this.getBlockByNumber(number)
+        ), 
+        block => block.signature !== undefined
+      );
+    }
+  };
 };
 
-/**
- * 
- * @param {Array of Number} numbers 
- * @return {Promise return Object[]}
- */
-const getBlocksByNumbers = async (numbers) => {
-  const blocks = await Promise.map(numbers,
-    async blockNumber => await getBlockByNumber(blockNumber).catch(() => {}) 
-  );
-  return _.chain(blocks).filter(block => block && block.signature !== undefined)
-    .value();
-};
 
 
 
 module.exports = {
-  getBlockByNumber,
-  getBlocksByNumbers,
-  getLastBlockNumber
+  getHeightForProvider,
+  createInstance
 };

@@ -1,22 +1,21 @@
-/**
- * 
- * Copyright 2017–2018, LaborX PTY
- * Licensed under the AGPL Version 3 license.
- * @author Kirill Sergeev <cloudkserg11@gmail.com>
- */
+/** 
+* Copyright 2017–2018, LaborX PTY
+* Licensed under the AGPL Version 3 license.
+* @author Kirill Sergeev <cloudkserg11@gmail.com>
+*/
 const _ = require('lodash'),
-  config = require('../config'),
   bunyan = require('bunyan'),
   Promise = require('bluebird'),
-  log = bunyan.createLogger({name: 'app.utils.allocateBlockBuckets'});
+  log = bunyan.createLogger({name: 'shared.utils.allocateBlockBuckets'});
 
 /**
  * @param {../services/nodeRequests} requests
  * @param {../services/blockrepository} repo 
+ * @param {Number} consensusAmount
  * @param {Number} startIndex
  * 
  **/
-module.exports = async function (requests, repo, startIndex) {
+module.exports = async function (requests, repo, startIndex, consensusAmount) {
 
   const currentBlock = await repo.findLastBlockNumber();
   
@@ -50,14 +49,14 @@ module.exports = async function (requests, repo, startIndex) {
           missedBlocks.push(blockNumber);
       }
 
-  let currentNodeHeight = await Promise.resolve(requests.getLastBlockNumber()).timeout(10000).catch(() => -1);
-  for (let i = currentCacheHeight + 1; i < currentNodeHeight - config.consensus.lastBlocksValidateAmount; i++)
+  let currentNodeHeight = await Promise.resolve(await requests.getLastBlockNumber()).timeout(10000).catch(() => -1);
+  for (let i = currentCacheHeight + 1; i < currentNodeHeight - consensusAmount; i++)
     missedBlocks.push(i);
-  missedBuckets = _.chain(missedBlocks).reverse().uniq().filter(number=> number < currentNodeHeight - config.consensus.lastBlocksValidateAmount).chunk(10000).value();
+  missedBuckets = _.chain(missedBlocks).reverse().uniq().filter(number=> number < currentNodeHeight - consensusAmount).chunk(10000).value();
 
-  if (currentNodeHeight === -1)
+  if (currentNodeHeight === -1) 
     return Promise.reject({code: 0});
 
-  return {missedBuckets: missedBuckets, height: currentNodeHeight - config.consensus.lastBlocksValidateAmount};
+  return {missedBuckets: missedBuckets, height: currentNodeHeight - consensusAmount};
 
 };

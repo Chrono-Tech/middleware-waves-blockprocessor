@@ -9,9 +9,7 @@ const requests = require('../../services/nodeRequests'),
   request = require('request-promise'),
   config = require('../config'),
   {URL} = require('url'),
-  bunyan = require('bunyan'),
-  Promise = require('bluebird'),
-  log = bunyan.createLogger({name: 'app.services.nodeSenderService'});
+  Promise = require('bluebird');
 
 const privatePost = (query, body, apiKey) => makeRequest(query, 'POST', body, {
   'X-API-Key': apiKey
@@ -24,18 +22,13 @@ const makeRequest = (path, method, body, headers = {}) => {
   const options = {
     method,
     body,
-    uri: new URL(path, config.node.rpc),
+    uri: new URL(path, config.dev.providerForTest),
     json: true,
     headers
   };
-  return request(options).catch(async (e) => await errorHandler(e));
+  return request(options);
 };
 
-const errorHandler = async (err) => {
-  if (err.name && err.name === 'StatusCodeError')
-    await Promise.delay(10000);
-  log.error(err);
-};
   
 
 
@@ -142,7 +135,7 @@ const getBalanceByAddressAndAsset = async (address, assetId) => {
 };
 
 
-module.exports = _.merge(requests, {
+module.exports = {
 
   signIssueTransaction,
   sendIssueTransaction,
@@ -154,4 +147,4 @@ module.exports = _.merge(requests, {
   //for tests only
   signTransaction,
   sendTransaction
-});
+};

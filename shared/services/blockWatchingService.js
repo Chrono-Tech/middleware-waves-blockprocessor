@@ -1,16 +1,14 @@
-/**
- * 
- * Copyright 2017–2018, LaborX PTY
- * Licensed under the AGPL Version 3 license.
- * @author Kirill Sergeev <cloudkserg11@gmail.com>
- */
-const config = require('../config'),
-  bunyan = require('bunyan'),
+/** 
+* Copyright 2017–2018, LaborX PTY
+* Licensed under the AGPL Version 3 license.
+* @author Kirill Sergeev <cloudkserg11@gmail.com>
+*/
+const  bunyan = require('bunyan'),
   _ = require('lodash'),
   Promise = require('bluebird'),
 
   EventEmitter = require('events'),
-  log = bunyan.createLogger({name: 'app.services.blockWatchingService'});
+  log = bunyan.createLogger({name: 'shared.services.blockWatchingService'});
 
 /**
  * @service
@@ -42,22 +40,34 @@ class blockWatchingService {
     this.lastBlocks = [];
     this.isSyncing = false;
 
+    this.networkId = '-104';
+    this.consensusAmount = '';
+
   }
 
-  async startSync () {
+  setNetwork (networkName) {
+    this.networkName = networkName;
+  }
+
+  setConsensusAmount (consensusAmount) {
+    this.consensusAmount = consensusAmount;
+  }
+
+  async startSync (maxHeight) {
 
     if (this.isSyncing)
       return;
 
     this.isSyncing = true;
 
-    const lastNumber = this.requests.getLastBlockNumber();
-    if (!lastNumber) 
-      await this.repo.removeUnconfirmedBlock();
+    if (!maxHeight) 
+      await this.repo.removeUnconfirmedTxs();
+    
 
-    log.info(`caching from block:${this.currentHeight} for network:${config.node.network}`);
+    log.info(`caching from block:${this.currentHeight} for network:${this.networkId}`);
     this.lastBlocks = [];
-    this.doJob();    
+    this.doJob();
+    await this.listener.start();
     await this.listener.onMessage( tx => this.UnconfirmedTxEvent(tx));
     
   }
@@ -66,18 +76,19 @@ class blockWatchingService {
 
     while (this.isSyncing)  
       try {
-        let block = await Promise.resolve(this.processBlock()).timeout(60000*5);
-        await this.repo.saveBlock(block, async (err) => {
+        const blockFromRequest = await Promise.resolve(this.processBlock()).timeout(60000*5);
+        const blockWithTxsFromDb = await this.repo.saveBlock(blockFromRequest, blockFromRequest.transactions, async (err) => {
           if (err) {
-            await this.repo.removeBlocks(block.number, config.consensus.lastBlocksValidateAmount);
-            log.info(`wrong sync state!, rollback to ${block.number - config.consensus.lastBlocksValidateAmount - 1} block`);
+            await this.repo.removeBlocksForNumbers(blockFromRequest.number, this.consensusAmount);
+            await this.repo.removeTxsForNumbers(blockFromRequest.number);
+            log.info(`wrong sync state!, rollback to ${blockFromRequest.number - this.consensusAmount - 1} block`);
           }
         });
 
         this.currentHeight++;
         _.pullAt(this.lastBlocks, 0);
-        this.lastBlocks.push(block.number);
-        this.events.emit('block', block);
+        this.lastBlocks.push(blockWithTxsFromDb.number);
+        this.events.emit('block', blockWithTxsFromDb);
       } catch (err) {
 
         if (err && err.code === 'ENOENT') {
@@ -107,12 +118,8 @@ class blockWatchingService {
   }
 
   async UnconfirmedTxEvent (tx) {
-    let currentUnconfirmedBlock = await this.repo.findUnconfirmedBlock();
-    const fullTx = await this.repo.createTransactions([tx]);
-    currentUnconfirmedBlock.transactions = _.union(currentUnconfirmedBlock.transactions, fullTx);
-
-    await this.repo.saveUnconfirmedBlock(currentUnconfirmedBlock);
-    this.events.emit('tx', _.get(fullTx, 0));
+    const txs = await this.repo.saveUnconfirmedTxs([tx]);
+    this.events.emit('tx', txs[0]);
   }
 
   async stopSync () {
@@ -127,8 +134,9 @@ class blockWatchingService {
 
   async processBlock () {
     let block = await this.getNewBlock(this.currentHeight+1);
-    if (!block || block.hash === undefined) 
+    if (!block || block.hash === undefined)  
       return Promise.reject({code: 0});
+    
 
     const lastBlocks = await this.requests.getBlocksByNumbers(this.lastBlocks);
     const lastBlockHashes = _.chain(lastBlocks).map(block => _.get(block, 'hash')).compact().value();
@@ -137,9 +145,11 @@ class blockWatchingService {
     savedBlocks = _.chain(savedBlocks).map(block => block.number).orderBy().value();
     if (savedBlocks.length !== this.lastBlocks.length) 
       return Promise.reject({code: 1});
+    
 
-    const txs = await this.repo.createTransactions(block.transactions);    
-    return this.repo.createBlock(block, txs);
+    return _.merge(this.repo.createBlock(block), {
+      transactions: await this.repo.createTransactions(block.transactions),
+    });
   }
 
 }

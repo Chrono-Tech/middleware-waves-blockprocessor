@@ -6,9 +6,11 @@
  */
 const accountModel = require('../../models/accountModel'),
   blockModel = require('../../models/blockModel');
+  txModel = require('../../models/txModel');
 
 
 module.exports =  async function () {
   await accountModel.remove();
+  await txModel.remove();
   await blockModel.remove();
 };
