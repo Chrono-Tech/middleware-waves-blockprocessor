@@ -1,6 +1,10 @@
 /**
  * Middleware service for handling emitted events on chronobank platform
  * @module Chronobank/waves-blockprocessor
+ * 
+ * Copyright 2017–2018, LaborX PTY
+ * Licensed under the AGPL Version 3 license.
+ * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
 const mongoose = require('mongoose'),
   config = require('./config'),
@@ -14,16 +18,18 @@ const  filterTxsByAccountsService = require('./services/filterTxsByAccountsServi
   amqp = require('amqplib'),
   bunyan = require('bunyan'),
   _ = require('lodash'),
-  WavesBlockWatchingService = require('./services/wavesBlockWatchingService'),
-  SyncCacheService = require('./services/syncCacheService'),
   log = bunyan.createLogger({name: 'core.blockProcessor'}),
+  
+
+  MasterNodeService = require('./shared/services/MasterNodeService'), 
+  SyncCacheService = require('./shared/services/syncCacheService'),
+  ProviderService = require('./shared/services/providerService'),
+
+  WavesBlockWatchingService = require('./services/wavesBlockWatchingService'),
 
   NodeListenerService = require('./services/nodeListenerService'),  
   blockRepo = require('./services/blockRepository'),
-  requests = require('./services/nodeRequests'),
-
-  W3CWebSocket = require('websocket').w3cwebsocket,
-  WebSocketAsPromised = require('websocket-as-promised');
+  requests = require('./services/nodeRequests');
 
 /**
  * @module entry point
@@ -38,10 +44,6 @@ const  filterTxsByAccountsService = require('./services/filterTxsByAccountsServi
   })
 );
 
-const wsp = new WebSocketAsPromised(config.node.ws, {
-    createWebSocket: url => new W3CWebSocket(url)
-  }),
-  listener = new NodeListenerService(wsp);
 
 const init = async function () {
 
@@ -65,28 +67,45 @@ const init = async function () {
     channel = await amqpConn.createChannel();
   }
 
-  const syncCacheService = new SyncCacheService(requests, blockRepo);
-  syncCacheService.startIndex = 1;
-
-
-  syncCacheService.events.on('block', async block => {
+  let blockEventCallback = async block => {
     log.info(`${block.hash} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountsService(block.transactions);
     await Promise.all(filtered.map(item =>
-      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))))
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
     ));
+  };
+  let txEventCallback = async tx => {
+    let filtered = await filterTxsByAccountsService([tx]);
+    await Promise.all(filtered.map(item =>
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
+    ));
+  };
+
+  const masterNodeService = new MasterNodeService(channel, config.rabbit.serviceName);
+  await masterNodeService.start();
+
+  const providerService = new ProviderService(config.node.providers, requests.getHeightForProvider);
+  await providerService.selectProvider();
+
+  const listener = new NodeListenerService(providerService);
+  
+  const requestsInstance = requests.createInstance(providerService);
+  const syncCacheService = new SyncCacheService(requestsInstance, blockRepo);
+  syncCacheService.startIndex = 1;
+
+
+  syncCacheService.events.on('block', blockEventCallback);
+
+
+  let endBlock = await syncCacheService.start(config.consensus.lastBlocksValidateAmount).catch((err) => {
+    if (_.get(err, 'code') === 0) {
+      log.info('nodes are down or not synced!');
+      process.exit(0);
+    }
+    log.error(err);
   });
 
-  let endBlock = await syncCacheService.start()
-    .catch((err) => {
-      if (_.get(err, 'code') === 0) {
-        log.info('nodes are down or not synced!');
-        process.exit(0);
-      }
-      log.error(err);
-    });
-
-  await new Promise((res) => {
+  await new Promise(res => {
     if (config.sync.shadow)
       return res();
 
@@ -96,27 +115,18 @@ const init = async function () {
     });
   });
 
-  const blockWatchingService = new WavesBlockWatchingService(requests, listener, blockRepo, endBlock);
+  const blockWatchingService = new WavesBlockWatchingService(requestsInstance, listener, blockRepo, endBlock);  
+  blockWatchingService.setNetwork(config.node.network);
+  blockWatchingService.setConsensusAmount(config.consensus.lastBlocksValidateAmount);
+  blockWatchingService.events.on('block', blockEventCallback);
+  blockWatchingService.events.on('tx', txEventCallback);
 
-  await blockWatchingService.startSync().catch(e => {
-    log.error(`error starting cache service: ${e}`);
-    process.exit(0);
-  });
-
-  blockWatchingService.events.on('block', async block => {
-    log.info(`${block.hash} (${block.number}) added to cache.`);
-    let filtered = await filterTxsByAccountsService(block.transactions);
-    await Promise.all(filtered.map(item => {
-      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: block.number}))))
+  const provider = await providerService.getProvider();
+  await blockWatchingService.startSync(provider.getHeight()).catch(err => {
+    if (_.get(err, 'code') === 0) {
+      log.error('no connections available or blockchain is not synced!');
+      process.exit(0);
     }
-    ));
-  });
-
-  blockWatchingService.events.on('tx', async (tx) => {
-    let filtered = await filterTxsByAccountsService([tx]);
-    await Promise.all(filtered.map(item =>
-      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item, {block: -1}))))
-    ));
   });
 
 };

@@ -1,9 +1,14 @@
+/** 
+* Copyright 2017–2018, LaborX PTY
+* Licensed under the AGPL Version 3 license.
+* @author Kirill Sergeev <cloudkserg11@gmail.com>
+*/
 const bunyan = require('bunyan'),
   _ = require('lodash'),
   Promise = require('bluebird'),
   EventEmitter = require('events'),
   allocateBlockBuckets = require('../utils/allocateBlockBuckets'),
-  log = bunyan.createLogger({name: 'app.services.syncCacheService'});
+  log = bunyan.createLogger({name: 'shared.services.syncCacheService'});
 
 /**
  * @service
@@ -29,9 +34,9 @@ class SyncCacheService {
     this.isSyncing = true;
   }
 
-  async start () {
+  async start (consensusAmount) {
     await this.indexCollection();
-    let data = await allocateBlockBuckets(this.requests, this.repo, this.startIndex);
+    let data = await allocateBlockBuckets(this.requests, this.repo, this.startIndex, consensusAmount);
     
     this.doJob(data.missedBuckets);
     return data.height;
@@ -91,9 +96,9 @@ class SyncCacheService {
         if (!block || !block.hash) 
           return Promise.reject('not find block for number=' + blockNumber);
         
-        await this.repo.saveBlock(block);
+        const blockWithTxsFromDb = await this.repo.saveBlock(block, block.transactions);
         _.pull(newChunkToLock, blockNumber);
-        this.events.emit('block', this.repo.createBlock(block));
+        this.events.emit('block', blockWithTxsFromDb);
       }).catch((e) => {
         if (e && e.code === 11000)
           return _.pull(newChunkToLock, newChunkToLock[0]);

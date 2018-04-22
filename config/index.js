@@ -2,9 +2,23 @@
  * Chronobank/eth-blockprocessor configuration
  * @module config
  * @returns {Object} Configuration
+ * 
+ * Copyright 2017–2018, LaborX PTY
+ * Licensed under the AGPL Version 3 license.
+ * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
-
+const _ = require('lodash');
 require('dotenv').config();
+
+const getProviders = (string) => _.chain(string).split(',')
+  .map(provider => {
+    const data = provider.split('@');
+    return {
+      http: data[0].trim(),
+      ws: ''
+    };
+  })
+  .value();
 
 const config = {
   mongo: {
@@ -28,8 +42,7 @@ const config = {
     shadow: parseInt(process.env.SYNC_SHADOW) || true
   },
   node: {
-    rpc: process.env.RPC || 'http://localhost:6869',
-    ws: process.env.WS || 'ws://ws.wavesplatform.com/api',
+    providers: getProviders(process.env.PROVIDERS) || [{http:'http://localhost:6869', ws: ''}],
     network: process.env.NETWORK || 'testnet',
     blockGenerationTime: process.env.BLOCK_GENERATION_TIME || 60
   }

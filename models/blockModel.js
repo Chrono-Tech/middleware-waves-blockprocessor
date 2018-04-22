@@ -2,6 +2,11 @@
  * Mongoose model. Represents a block in eth
  * @module models/blockModel
  * @returns {Object} Mongoose model
+ *
+ * 
+ * Copyright 2017–2018, LaborX PTY
+ * Licensed under the AGPL Version 3 license.
+ * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
 
 const mongoose = require('mongoose'),
@@ -21,34 +26,7 @@ const Block = new mongoose.Schema({
   },
   blocksize: {type: String},
   fee: {type: String},  
-
-  transactions: [{
-    hash: {type:String, index: true}, //id in block waves
-    signature: {type: String},    
-    'type': {type: String},
-    timestamp: {type: Date},    
-
-    assetId: {type: String, index: true}, //id of asset
-    feeAsset: {type: String}, //fee in asset
-
-    attachment: {type: String},
-
-    sender: {type: String, index: true},
-    senderPublicKey: {type: String},
-    recipient: {type: String, index: true},
-    fee: {type: String},
-    amount: {type: Number},    
-
-    transfers: [{
-      recipient: { type: String, index: true},
-      amount: {type: Number}
-    }]
-
-  }],
   transactionCount: {type: String},
-
-
-  network: {type: String},
   created: {type: Date, required: true, default: Date.now}
 });
 

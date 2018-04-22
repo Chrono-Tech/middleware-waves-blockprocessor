@@ -8,7 +8,6 @@
     "bluebird": "^3.5.0",
     "bunyan": "^1.8.10",
     "bytebuffer": "^5.0.1",
-    "curve25519-js": "git+https://github.com/wavesplatform/curve25519-js",
     "dotenv": "^4.0.0",
     "lodash": "^4.17.4",
     "mongoose": "^4.11.11",
@@ -18,6 +17,7 @@
     "require-all": "^2.2.0",
     "semaphore": "^1.1.0",
     "tweetnacl": "^1.0.0",
+    "uniqid": "^4.1.1",
     "websocket": "^1.0.25",
     "websocket-as-promised": "^0.6.0",
     "ws": "^5.1.0"
@@ -26,8 +26,8 @@
     "lint": "node ./node_modules/eslint/bin/eslint.js -c .eslintrc.js --ext .js --fix --ignore-path .eslintignore .",
     "test": "node ./node_modules/mocha/bin/mocha -t 300000 tests"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "chronobank",
+  "license": "AGPL-3.0",
   "description": "",
   "devDependencies": {
     "babel-eslint": "^8.0.0",
