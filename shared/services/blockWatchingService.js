@@ -118,8 +118,12 @@ class blockWatchingService {
   }
 
   async UnconfirmedTxEvent (tx) {
-    const txs = await this.repo.saveUnconfirmedTxs([tx]);
-    this.events.emit('tx', txs[0]);
+    try {
+      const txs = await this.repo.saveUnconfirmedTxs([tx]);
+      this.events.emit('tx', txs[0]);      
+    } catch (e) {
+
+    }
   }
 
   async stopSync () {
