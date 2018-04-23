@@ -10,16 +10,6 @@
 const _ = require('lodash');
 require('dotenv').config();
 
-const getProviders = (string) => _.chain(string).split(',')
-  .map(provider => {
-    const data = provider.split('@');
-    return {
-      http: data[0].trim(),
-      ws: ''
-    };
-  })
-  .value();
-
 const config = {
   mongo: {
     accounts: {
@@ -42,7 +32,16 @@ const config = {
     shadow: parseInt(process.env.SYNC_SHADOW) || true
   },
   node: {
-    providers: getProviders(process.env.PROVIDERS) || [{http:'http://localhost:6869', ws: ''}],
+    providers: _.chain(process.env.PROVIDERS || 'http://localhost:6869@')
+      .split(',')
+      .map(provider => {
+        const data = provider.split('@');
+        return {
+          http: data[0].trim(),
+          ws: ''
+        };
+      })
+      .value(),
     network: process.env.NETWORK || 'testnet',
     blockGenerationTime: process.env.BLOCK_GENERATION_TIME || 60
   }
