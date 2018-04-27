@@ -113,6 +113,7 @@ describe('core/block processor', function () {
       (async () => {
         return await consumeMessages(1, channel, (message) => {
           const content = JSON.parse(message.content);
+          console.log(content.id, tx.id);
           if (content.id === tx.id)
             return checkMessage(content);
           return false;
