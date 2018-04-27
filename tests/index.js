@@ -102,13 +102,18 @@ describe('core/block processor', function () {
     const tx = await requests.signAssetTransaction(
       config.dev.apiKey, accounts[1], 100, accounts[0], assetId);
 
+    const channel = await amqpInstance.createChannel();  
+    await connectToQueue(channel);
+
+    const ws = new WebSocket('ws://localhost:15674/ws');
+    const client = Stomp.over(ws, {heartbeat: false, debug: false});
+
     return await Promise.all([
       (async () => {
-        await requests.sendAssetTransaction(config.dev.apiKey, tx);
+        ast= await requests.sendAssetTransaction(config.dev.apiKey, tx);
+        console.log(ast);
       })(),
       (async () => {
-        const channel = await amqpInstance.createChannel();  
-        await connectToQueue(channel);
         return await consumeMessages(1, channel, (message) => {
           const content = JSON.parse(message.content);
           if (content.id === tx.id)
@@ -117,8 +122,6 @@ describe('core/block processor', function () {
         });
       })(),
       (async () => {
-        const ws = new WebSocket('ws://localhost:15674/ws');
-        const client = Stomp.over(ws, {heartbeat: false, debug: false});
         return await consumeStompMessages(1, client, (message) => {
           const content = JSON.parse(message.body);
           if (content.id === tx.id)

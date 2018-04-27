@@ -122,7 +122,6 @@ class blockWatchingService {
       const txs = await this.repo.saveUnconfirmedTxs([tx]);
       this.events.emit('tx', txs[0]);      
     } catch (e) {
-
     }
   }
 
