@@ -133,22 +133,22 @@ describe('core/block processor', function () {
     ]);
   });
 
-  it('del account and send some waves from account1 to account2 and validate that zero messages', async () => {
-    await accountModel.remove();
-    const transferTx = await requests.signTransaction(
-      config.dev.apiKey, accounts[1], 100, accounts[0]);
+  // it('del account and send some waves from account1 to account2 and validate that zero messages', async () => {
+  //   await accountModel.remove();
+  //   const transferTx = await requests.signTransaction(
+  //     config.dev.apiKey, accounts[1], 100, accounts[0]);
 
-    return await Promise.all([
-      (async () => {
-        await requests.sendTransaction(config.dev.apiKey, transferTx);
-      })(),
-      (async () => {
-        await Promise.delay(12000);
-        const channel = await amqpInstance.createChannel();  
-        const queue = await connectToQueue(channel);
-        expect(queue.messageCount).to.equal(0);
-      })()
-    ]);
-  });
+  //   return await Promise.all([
+  //     (async () => {
+  //       await requests.sendTransaction(config.dev.apiKey, transferTx);
+  //     })(),
+  //     (async () => {
+  //       await Promise.delay(12000);
+  //       const channel = await amqpInstance.createChannel();  
+  //       const queue = await connectToQueue(channel);
+  //       expect(queue.messageCount).to.equal(0);
+  //     })()
+  //   ]);
+  // });
 
 });
