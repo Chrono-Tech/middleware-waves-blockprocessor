@@ -71,7 +71,7 @@ const init = async function () {
     //log.info(`${block.hash} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountsService(block.transactions);
     await Promise.all(filtered.map(item => {
-      //log.info(`confirmed tx ${item.hash} ${item.blockNumber}`);
+      log.info(`confirmed tx ${item.hash} ${item.blockNumber}`);
       channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
     }));
   };
