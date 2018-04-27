@@ -88,6 +88,7 @@ class blockWatchingService {
         this.currentHeight++;
         _.pullAt(this.lastBlocks, 0);
         this.lastBlocks.push(blockWithTxsFromDb.number);
+        log.info(`${blockWithTxsFromDb.number} parsed and his height = ${this.currentHeight}`);
         this.events.emit('block', blockWithTxsFromDb);
       } catch (err) {
 

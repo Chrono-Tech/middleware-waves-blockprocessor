@@ -99,6 +99,7 @@ describe('core/block processor', function () {
 
 
   it('send some assets from account0 to account1 and validate countMessages(2) and structure message', async () => {
+
     const tx = await requests.signAssetTransaction(
       config.dev.apiKey, accounts[1], 100, accounts[0], assetId);
 
@@ -112,7 +113,6 @@ describe('core/block processor', function () {
       (async () => {
         return await consumeMessages(1, channel, (message) => {
           const content = JSON.parse(message.content);
-          console.log(content.id, tx.id);
           if (content.id === tx.id)
             return checkMessage(content);
           return false;

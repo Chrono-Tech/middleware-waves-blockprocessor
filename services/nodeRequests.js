@@ -98,6 +98,7 @@ const createInstance = (providerService) => {
       return await getHeightForProvider(provider.getHttp());
     },
 
+
     async onError () {
       const provider = await providerService.getProvider();
       providerService.disableProvider(provider);
