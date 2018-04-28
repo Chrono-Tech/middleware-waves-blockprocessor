@@ -66,19 +66,53 @@ describe('core/block processor', function () {
     await clearQueues(amqpInstance);
   });
 
-  it('send some waves from account0 to account1 and validate countMessages(2) and structure message', async () => {
-    const tx = await requests.signTransaction(
-      config.dev.apiKey, accounts[1], 100, accounts[0]);
+  // it('send some waves from account0 to account1 and validate countMessages(2) and structure message', async () => {
+  //   const tx = await requests.signTransaction(
+  //     config.dev.apiKey, accounts[1], 100, accounts[0]);
+
+  //   return await Promise.all([
+  //     (async () => {
+  //       await requests.sendTransaction(config.dev.apiKey, tx);
+  //     })(),
+  //     (async () => {
+  //       const channel = await amqpInstance.createChannel();  
+  //       await connectToQueue(channel);
+  //       return await consumeMessages(1, channel, (message) => {
+  //         const content = JSON.parse(message.content);
+  //         if (content.id === tx.id)
+  //           return checkMessage(content);
+  //         return false;
+  //       });
+  //     })(),
+  //     (async () => {
+  //       const ws = new WebSocket('ws://localhost:15674/ws');
+  //       const client = Stomp.over(ws, {heartbeat: false, debug: false});
+  //       return await consumeStompMessages(1, client, (message) => {
+  //         const content = JSON.parse(message.body);
+  //         if (content.id === tx.id)
+  //           return checkMessage(content);
+  //         return false;
+  //       });
+  //     })()
+  //   ]);
+  // });
+
+
+  it('send some assets from account0 to account1 and validate countMessages(2) and structure message', async () => {
+
+    const tx = await requests.signAssetTransaction(
+      config.dev.apiKey, accounts[1], 100, accounts[0], assetId);
 
     return await Promise.all([
       (async () => {
-        await requests.sendTransaction(config.dev.apiKey, tx);
+        await requests.sendAssetTransaction(config.dev.apiKey, tx);
       })(),
       (async () => {
         const channel = await amqpInstance.createChannel();  
         await connectToQueue(channel);
         return await consumeMessages(1, channel, (message) => {
           const content = JSON.parse(message.content);
+          console.log(content.id, tx.id);
           if (content.id === tx.id)
             return checkMessage(content);
           return false;
@@ -93,42 +127,6 @@ describe('core/block processor', function () {
             return checkMessage(content);
           return false;
         });
-      })()
-    ]);
-  });
-
-
-  it('send some assets from account0 to account1 and validate countMessages(2) and structure message', async () => {
-
-    const tx = await requests.signAssetTransaction(
-      config.dev.apiKey, accounts[1], 100, accounts[0], assetId);
-
-    const channel = await amqpInstance.createChannel();  
-    await connectToQueue(channel);
-
-    const ws = new WebSocket('ws://localhost:15674/ws');
-    const client = Stomp.over(ws, {heartbeat: false, debug: false});
-
-    return await Promise.all([
-      (async () => {
-        return await consumeMessages(1, channel, (message) => {
-          const content = JSON.parse(message.content);
-          console.log(content.id, tx.id);
-          if (content.id === tx.id)
-            return checkMessage(content);
-          return false;
-        });
-      })(),
-      (async () => {
-        return await consumeStompMessages(1, client, (message) => {
-          const content = JSON.parse(message.body);
-          if (content.id === tx.id)
-            return checkMessage(content);
-          return false;
-        });
-      })(),
-      (async () => {
-        ast= await requests.sendAssetTransaction(config.dev.apiKey, tx);
       })()
     ]);
   });
