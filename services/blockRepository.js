@@ -60,7 +60,9 @@ const removeUnconfirmedTxs = async () => {
 const saveUnconfirmedTxs = async (inputTxs) => {
   const txs = await createTransactions(inputTxs, -1);
 
-  await txModel.insertMany(txs).catch(log.error.bind(log));
+  const result = await txModel.insertMany(txs).catch(() => false);
+  if (!result)
+    return [];
 
   return txs;
 };
