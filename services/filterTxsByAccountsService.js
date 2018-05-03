@@ -1,3 +1,9 @@
+/**
+ * 
+ * Copyright 2017–2018, LaborX PTY
+ * Licensed under the AGPL Version 3 license.
+ * @author Kirill Sergeev <cloudkserg11@gmail.com>
+ */
 const _ = require('lodash'),
   accountModel = require('../models/accountModel');
 
@@ -9,14 +15,17 @@ const _ = require('lodash'),
  */
 
 const getAdrsFromTx = (tx) => {
-  const adrs = [];
-  if (tx.sender) 
-    adrs.push(tx.sender);
-  if (tx.recipient) 
-    adrs.push(tx.recipient);
-  if (tx.transfers)
-    _.each(tx.transfers, transfer => adrs.push(transfer.recipient));
-  return adrs;
+  return _.chain([
+    _.get(tx, 'sender', undefined), 
+    _.get(tx, 'recipient', undefined), 
+    _.map(
+      _.get(tx, 'transfers', []), 
+      transfer => transfer.recipient
+    )
+  ])
+    .flattenDeep()
+    .filter(addr => addr !== undefined)
+    .value();
 };
 
 
@@ -30,7 +39,7 @@ module.exports = async txs => {
     .uniq()
     .value();
 
-  let filteredAccounts = await accountModel.find({
+  const filteredAccounts = await accountModel.find({
     address: {
       $in: addresses
     },
@@ -38,17 +47,16 @@ module.exports = async txs => {
       $ne: false
     }
   });
-  filteredAccounts = _.chain(filteredAccounts)
-    .map(account => account.address)
-    .flattenDeep()
-    .value();
+  const filteredAddresses = _.map(filteredAccounts, account => account.address);
 
-  return _.chain(txs)
-    .filter(tx => {
-      return _.find(filteredAccounts, account =>
-        getAdrsFromTx(tx).includes(account)
-      );
-    })
-    .value();
-
+  return  _.reduce(txs, (acc, tx) => {
+    _.each(
+      _.intersection(
+        getAdrsFromTx(tx),
+        filteredAddresses
+      ), 
+      address => { acc.push(_.merge(tx, { address })); }
+    );
+    return acc;
+  }, []);
 };
