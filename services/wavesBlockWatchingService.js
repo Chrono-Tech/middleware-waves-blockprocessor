@@ -5,6 +5,8 @@
  * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
 const _ = require('lodash');
+const blockModel = require('../models/blockModel');
+
 const BlockWatchingService = require('../shared/services/blockWatchingService');
 class WavesBlockWatchingService extends BlockWatchingService
 {
@@ -39,6 +41,15 @@ class WavesBlockWatchingService extends BlockWatchingService
       this.currentHeight = blockHeight;
       _.pullAt(this.lastBlocks, this.lastBlocks.length-1);
       return block;
+    } 
+
+    const blockSecond = await this.requests.getBlockByNumber(blockHeight - 1);
+    const blockSecondInDb = await blockModel.findOne({number: blockHeight - 1}); 
+    if (blockSecond.signature !== blockSecondInDb.hash) {
+      this.currentHeight = blockHeight-1;
+      _.pullAt(this.lastBlocks, this.lastBlocks.length-1);
+      _.pullAt(this.lastBlocks, this.lastBlocks.length-1);
+      return blockSecond;
     } 
     return {};
     
