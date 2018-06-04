@@ -15,7 +15,7 @@ This module is used for updating balances for registered accounts (see a descrip
 
 #### How does it work?
 
-Block processor connects to ipc, fetch blocks one by one and cache them in mongodb.
+Block processor connects to http node, fetch blocks one by one and cache them in mongodb.
 
 Which txs block processor filter?
 
