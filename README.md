@@ -10,7 +10,7 @@ This module is a part of middleware services. You can install it in 2 ways:
 2) by hands: just clone the repo, do 'npm install', set your .env - and you are ready to go
 
 #### About
-This module is used for updating balances for registered accounts (see a description of accounts in [block processor](https://github.com/ChronoBank/middleware-waves-blockprocessor)).
+This module is used for watching new blocks and txs for registered on platform users (please, check out - how you can register new user via [rest api](https://github.com/ChronoBank/middleware-waves-rest))).
 
 
 #### How does it work?
