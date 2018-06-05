@@ -71,15 +71,15 @@ const init = async function () {
     log.info(`${block.hash} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountsService(block.transactions);
     await Promise.all(filtered.map(item => {
-      log.info('confirmed', item.hash, item.blockNumber);      
-      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
+      log.info('confirmed', item.id, item.blockNumber);      
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))));
     }));
   };
   let txEventCallback = async tx => {
     let filtered = await filterTxsByAccountsService([tx]);
     await Promise.all(filtered.map(item => {
-      log.info('unconfirmed', item.hash, item.blockNumber);
-      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
+      log.info('unconfirmed', item.id);
+      channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))));
     }));
   };
 
@@ -100,11 +100,11 @@ const init = async function () {
 
 
   let endBlock = await syncCacheService.start(config.consensus.lastBlocksValidateAmount).catch((err) => {
-    if (_.get(err, 'code') === 0) {
+    if (_.get(err, 'code') === 0) 
       log.info('nodes are down or not synced!');
-      process.exit(0);
-    }
-    log.error(err);
+    else 
+      log.error(err);
+    process.exit(0);
   });
 
   await new Promise(res => {
