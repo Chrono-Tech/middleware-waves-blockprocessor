@@ -31,10 +31,36 @@ Block processor filter txs by specified user accounts (addresses). The addresses
 }
 ```
 
-So, when someone, for instance do a transaction (sample from stomp client):
+So, when someone, for instance do a transaction (sample from test example):
 ```
-/* waves.accounts[0] - "0x1cc5ceebda535987a4800062f67b9b78be0ef419" */
-waves.sendTransaction({sender: waves.accounts[0], recipient: waves.accounts[1], value: 200})
+/* 
+* fromAddress - "3JfE6tjeT7PnpuDQKxiVNLn4TJUFhuMaaT5"
+* toAddress - "3Jk2fh8aMBmhCQCkBcUfKBSEEa3pDMkDjCr"
+* X-API-KEY - 'password'(in waves-devnet.conf)
+* host - localhost:6869 
+*/
+const request = require('request-promise')
+const tx = await request({
+    method: 'POST',
+    body: {
+        type: 4,
+        sender: fromAddress,
+        recipient: toAddress,
+        amount: 200,
+        fee: 100000,
+        attachment: 'string'
+    },
+    uri: host . 'transactions/sign',
+    json: true,
+    headers: {'X-API-Key': apiKey}
+ })
+ await request({
+    method: 'POST',
+    body: tx,    
+    uri: host . 'transactions/broadcast',
+    json: true,
+    headers: {'X-API-Key': apiKey}
+ })
 ```
 
 this tx is going to be included in next blocks. Block parser fetch these blocks, and filter by "recipient" and "sender" recipients.
