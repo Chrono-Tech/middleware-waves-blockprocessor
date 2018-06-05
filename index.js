@@ -68,7 +68,7 @@ const init = async function () {
   }
 
   let blockEventCallback = async block => {
-    //log.info(`${block.hash} (${block.number}) added to cache.`);
+    log.info(`${block.hash} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountsService(block.transactions);
     await Promise.all(filtered.map(item => {
       log.info('confirmed', item.hash, item.blockNumber);      
