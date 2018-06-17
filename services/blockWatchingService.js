@@ -116,7 +116,7 @@ class blockWatchingService {
       await apiProvider.getBlockByNumber(this.currentHeight - 1);
 
     if (this.lastBlockHash !== null && this.currentHeight > 1) {
-      let savedBlock = await models.blockModel.count({hash: lastBlock.prevBlockHash.data});
+      let savedBlock = await models.blockModel.count({hash: lastBlock.hash});
 
       if (!savedBlock)
         return Promise.reject({code: 1});

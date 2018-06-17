@@ -24,7 +24,7 @@ module.exports = async (blockNumber) => {
 
   const txs = rawBlock.transactions.map(tx => _.merge(tx, {
     blockNumber: rawBlock.number,
-    hash: tx.signature,
+    hash: tx.id,
   }));
 
   return {

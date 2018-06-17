@@ -37,8 +37,7 @@ class SyncCacheService {
   async start (consensusAmount) {
     await this.indexCollection();
     let data = await allocateBlockBuckets(this.requests, this.repo, this.startIndex, consensusAmount);
-    
-    this.doJob(data.missedBuckets);
+    //this.doJob(data.missedBuckets);
     return data.height;
   }
 

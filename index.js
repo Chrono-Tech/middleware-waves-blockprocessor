@@ -11,7 +11,7 @@ const mongoose = require('mongoose'),
   Promise = require('bluebird'),
   MasterNodeService = require('middleware-common-components/services/blockProcessor/MasterNodeService'),
   models = require('./models'),
-  //BlockWatchingService = require('./services/blockWatchingService'),
+  BlockWatchingService = require('./services/blockWatchingService'),
   SyncCacheService = require('./services/syncCacheService'),
   filterTxsByAccountService = require('./services/filterTxsByAccountService'),
   amqp = require('amqplib'),
@@ -81,14 +81,12 @@ const init = async function () {
     });
   });
 
-  /*
     const blockWatchingService = new BlockWatchingService(endBlock);
 
     blockWatchingService.events.on('block', blockEventCallback);
     blockWatchingService.events.on('tx', txEventCallback);
 
     await blockWatchingService.startSync(endBlock);
-  */
 
 };
 

@@ -22,7 +22,7 @@ const bunyan = require('bunyan'),
 
 class providerService {
 
-  constructor () {
+  constructor() {
     this.events = new EventEmitter();
     this.connector = null;
 
@@ -32,12 +32,12 @@ class providerService {
       }, 60000 * 5);
   }
 
-  async resetConnector () {
+  async resetConnector() {
     this.switchConnector();
     this.events.emit('disconnected');
   }
 
-  async switchConnector () {
+  async switchConnector() {
 
     const providerURI = await Promise.any(config.node.providers.map(async providerURI => {
       const apiProvider = new Api(providerURI);
@@ -55,29 +55,29 @@ class providerService {
     this.connector = new Api(providerURI);
     this.connector.events.on('disconnect', () => this.resetConnector());
 
-        this.pingIntervalId = setInterval(async () => {
+    this.pingIntervalId = setInterval(async () => {
 
-          const isConnected = await this.connector.getHeight().catch(()=>false);
+      const isConnected = await this.connector.getHeight().catch(() => false);
 
-          if (isConnected === false) {
-            clearInterval(this.pingIntervalId);
-            this.resetConnector();
-          }
-        }, 5000);
+      if (isConnected === false) {
+        clearInterval(this.pingIntervalId);
+        this.resetConnector();
+      }
+    }, 5000);
 
-/*
-    await this.connector.openWSProvider();
 
-    this.connector.wsProvider.subscribe('/unconfirmed', (message) => {
-      this.events.emit('unconfirmedTx', JSON.parse(message.body));
+    await this.connector.watchUnconfirmed();
+
+    this.connector.events.on('unconfirmedTx', tx => {
+      this.events.emit('unconfirmedTx', tx);
     });
-*/
+
 
     return this.connector;
 
   }
 
-  async switchConnectorSafe () {
+  async switchConnectorSafe() {
 
     return new Promise(res => {
       sem.take(async () => {
@@ -88,7 +88,7 @@ class providerService {
     });
   }
 
-  async get () {
+  async get() {
     return this.connector || await this.switchConnectorSafe();
   }
 
