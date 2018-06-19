@@ -36,7 +36,7 @@ class blockWatchingService {
     this.listener = listener;
     this.repo = repo;
     this.events = new EventEmitter();
-    this.currentHeight = currentHeight;
+    this.currentHeight = currentHeight || 0;
     this.lastBlocks = [];
     this.isSyncing = false;
 
@@ -138,6 +138,7 @@ class blockWatchingService {
 
   async processBlock () {
     let block = await this.getNewBlock(this.currentHeight+1);
+    log.info('get new block ', this.currentHeight, block.hash);
     if (!block || block.hash === undefined)  
       return Promise.reject({code: 0});
     

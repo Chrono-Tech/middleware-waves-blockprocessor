@@ -24,7 +24,7 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c .eslintrc.js --ext .js --fix --ignore-path .eslintignore .",
-    "test": "node ./node_modules/mocha/bin/mocha -t 300000 tests"
+    "test": "node ./node_modules/mocha/bin/mocha -t 3000000 tests"
   },
   "author": "chronobank",
   "license": "AGPL-3.0",

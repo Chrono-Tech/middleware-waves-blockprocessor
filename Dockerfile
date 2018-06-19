@@ -14,6 +14,6 @@ RUN mkdir src && cd src && \
     dmt init && \
     dmt install middleware-waves-blockprocessor"#$RELEASE" \
     middleware-waves-balance-processor"#$RELEASE" \
-    middleware-waves-rest"#$RELEASE" \
+    middleware-waves-rest"#$RELEASE"
 EXPOSE 8080
 CMD pm2-docker start /mnt/config/${NETWORK_TYPE}/ecosystem.config.js
