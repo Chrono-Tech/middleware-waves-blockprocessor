@@ -43,10 +43,28 @@ const addBlock = async (block, removePending = false) => {
 
 const updateDbStateWithBlock = async (block) => {
 
-  let bulkOps = block.txs.map(tx => {
+
+  let txs = block.transactions.map(tx => ({
+      _id: tx.signature,
+      blockNumber: tx.blockNumber,
+      timestamp: tx.timestamp,
+      amount: tx.amount || null,
+      type: tx.type,
+      recipient: tx.recipient,
+      sender: tx.sender,
+      assetId: tx.assetId,
+      feeAsset: tx.feeAsset,
+      attachment: tx.attachment,
+      fee: tx.fee,
+      transfers: tx.transfers
+    })
+  );
+
+
+  let bulkOps = txs.map(tx => {
     return {
       updateOne: {
-        filter: {hash: tx.hash},
+        filter: {_id: tx._id},
         update: tx,
         upsert: true
       }
@@ -56,7 +74,16 @@ const updateDbStateWithBlock = async (block) => {
   if (bulkOps.length)
     await models.txModel.bulkWrite(bulkOps);
 
-  const toSaveBlock = _.omit(block, 'txs');
+  const toSaveBlock = {
+    _id: block.signature,
+    version: block.version,
+    number: block.number,
+    timestamp: block.timestamp,
+    blocksize: block.blocksize,
+    fee: block.fee
+  };
+
+
   return await models.blockModel.findOneAndUpdate({number: toSaveBlock.number}, toSaveBlock, {upsert: true});
 };
 

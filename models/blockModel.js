@@ -13,16 +13,14 @@ const mongoose = require('mongoose'),
   config = require('../config');
 
 const Block = new mongoose.Schema({
+  _id: {type: String},
   version: {type: String},
   number: {type: Number, unique: true, index: true},
-  hash: {type: String, unique: true, index: true}, //signature in block waves
   timestamp: {type: Date, index: true, required: true},
-
   blocksize: {type: String},
   fee: {type: String},
-  transactionCount: {type: String},
   created: {type: Date, required: true, default: Date.now}
-});
+}, {_id: false});
 
 module.exports = () =>
   mongoose.model(`${config.mongo.data.collectionPrefix}Block`, Block);

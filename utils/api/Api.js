@@ -59,7 +59,6 @@ class Api {
 
     return _.merge(block, {
       number: block.height,
-      hash: block.signature,
       timestamp: block.time
     });
   }

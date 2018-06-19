@@ -17,13 +17,23 @@ const bunyan = require('bunyan'),
 
 module.exports = async (tx) => {
 
-  _.merge(tx, {
-    blockNumber: -1,
-    hash: tx.id,
-  });
+  const toSaveTX = {
+    _id: tx.signature,
+    blockNumber: tx.blockNumber,
+    timestamp: tx.timestamp,
+    amount: tx.amount,
+    type: tx.type,
+    recipient: tx.recipient,
+    sender: tx.sender,
+    assetId: tx.assetId,
+    feeAsset: tx.feeAsset,
+    attachment: tx.attachment,
+    fee: tx.fee,
+    transfers: tx.transfers
+  };
 
-  log.info(`inserting unconfirmed tx ${tx.hash}`);
-  await models.txModel.create(tx);
+  log.info(`inserting unconfirmed tx ${tx.signature}`);
+  await models.txModel.create(toSaveTX);
   return tx;
 
 };

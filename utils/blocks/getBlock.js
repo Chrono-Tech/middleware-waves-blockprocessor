@@ -22,19 +22,20 @@ module.exports = async (blockNumber) => {
   if (!rawBlock)
     return Promise.reject({code: 2});
 
-  const txs = rawBlock.transactions.map(tx => _.merge(tx, {
-    blockNumber: rawBlock.number,
-    hash: tx.id,
-  }));
+  const txs = rawBlock.transactions.map(tx =>
+    _.merge(tx, {
+      blockNumber: rawBlock.number,
+      signature: tx.signature || tx.id
+    }));
 
   return {
     number: rawBlock.number,
-    hash: rawBlock.hash,
+    signature: rawBlock.signature,
     version: rawBlock.version,
     timestamp: rawBlock.timestamp || Date.now(),
     blocksize: rawBlock.blocksize,
     fee: rawBlock.fee,
-    txs: txs
+    transactions: txs
   };
 
 };
