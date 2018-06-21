@@ -43,8 +43,7 @@ class providerService {
       const apiProvider = new Api(providerURI);
       await apiProvider.getHeight();
       return providerURI;
-    })).catch((e) => {
-      console.log(e);
+    })).catch(() => {
       log.error('no available connection!');
       process.exit(0);
     });

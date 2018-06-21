@@ -3,19 +3,21 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "middleware-common-components": "github:ChronoBank/middleware-common-components",
+    "@waves/waves-api": "^0.28.4",
     "amqplib": "^0.5.1",
     "bluebird": "^3.5.0",
     "bunyan": "^1.8.10",
     "dotenv": "^4.0.0",
     "lodash": "^4.17.4",
+    "middleware-common-components": "github:ChronoBank/middleware-common-components",
     "mongoose": "^4.11.11",
     "mongoose-long": "^0.1.1",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "require-all": "^2.2.0",
     "semaphore": "^1.1.0",
-    "uniqid": "^4.1.1"
+    "uniqid": "^4.1.1",
+    "waves-api": "^0.24.2"
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c .eslintrc.js --ext .js --fix --ignore-path .eslintignore .",

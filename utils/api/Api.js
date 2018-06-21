@@ -32,7 +32,7 @@ class Api {
         this.events.emit('unconfirmedTx', tx);
       });
 
-    }, 20000);
+    }, 10000);
   }
 
   stopWatchUnconfirmed() {
