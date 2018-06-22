@@ -21,9 +21,6 @@ const config = {
       collectionPrefix: process.env.MONGO_DATA_COLLECTION_PREFIX || process.env.MONGO_COLLECTION_PREFIX || 'waves'
     }
   },
-  consensus: {
-    lastBlocksValidateAmount: parseInt(process.env.CONSENSUS_BLOCK_VALIDATE_AMOUNT) || 12
-  },
   rabbit: {
     url: process.env.RABBIT_URI || 'amqp://localhost:5672',
     serviceName: process.env.RABBIT_SERVICE_NAME || 'app_waves'
@@ -42,8 +39,7 @@ const config = {
         };
       })
       .value(),
-    network: process.env.NETWORK || 'testnet',
-    blockGenerationTime: process.env.BLOCK_GENERATION_TIME || 60
+    network: process.env.NETWORK || 'testnet'
   }
 };
 
