@@ -55,7 +55,7 @@ class Api {
     const block = await this._makeRequest(`blocks/at/${height}`);
 
     if (!block || !block.height)
-      return {};
+      return null;
 
     return _.merge(block, {
       number: block.height,

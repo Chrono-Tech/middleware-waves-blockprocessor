@@ -67,7 +67,7 @@ const updateDbStateWithBlock = async (block) => {
   const toSaveBlock = (new models.blockModel(block)).toObject();
   toSaveBlock._id = block.signature;
 
-  return await models.blockModel.findOneAndUpdate({number: toSaveBlock.number}, toSaveBlock, {upsert: true});
+  return await models.blockModel.findOneAndUpdate({_id: toSaveBlock._id}, toSaveBlock, {upsert: true});
 };
 
 const rollbackStateFromBlock = async (block) => {
