@@ -5,29 +5,25 @@
  */
 
 const bunyan = require('bunyan'),
-  _ = require('lodash'),
-  //removeUnconfirmedTxs = require('../txs/removeUnconfirmedTxs'),
-  //crypto = require('crypto'),
   sem = require('semaphore')(3),
   Promise = require('bluebird'),
   models = require('../../models'),
   log = bunyan.createLogger({name: 'app.services.addBlock'});
 
 /**
- * @service
- * @description filter txs by registered addresses
- * @param block - the block object
- * @param removePending - remove unconfirmed txs, which has been pulled from mempool
+ * @function
+ * @description add block to the cache
+ * @param block - prepared block with full txs
  * @returns {Promise.<*>}
  */
 
-const addBlock = async (block, removePending = false) => {
+const addBlock = async (block) => {
 
   return new Promise((res, rej) => {
 
     sem.take(async () => {
       try {
-        await updateDbStateWithBlock(block, removePending);
+        await updateDbStateWithBlock(block);
         res();
       } catch (err) {
         log.error(err);
@@ -41,6 +37,12 @@ const addBlock = async (block, removePending = false) => {
 
 };
 
+/**
+ * @function
+ * @description add new block, txs and coins to the cache
+ * @param block
+ * @return {Promise<void>}
+ */
 const updateDbStateWithBlock = async (block) => {
 
 
@@ -70,6 +72,12 @@ const updateDbStateWithBlock = async (block) => {
   return await models.blockModel.findOneAndUpdate({_id: toSaveBlock._id}, toSaveBlock, {upsert: true});
 };
 
+/**
+ * @function
+ * @description rollback the cache to previous block
+ * @param block - current block
+ * @return {Promise<void>}
+ */
 const rollbackStateFromBlock = async (block) => {
 
   log.info('rolling back txs state');

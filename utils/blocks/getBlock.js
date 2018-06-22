@@ -8,12 +8,14 @@ const Promise = require('bluebird'),
   _ = require('lodash'),
   providerService = require('../../services/providerService');
 
-module.exports = async (blockNumber) => {
 
-  /**
-   * Get raw block
-   * @type {Object}
-   */
+/**
+ * @function
+ * @description get block from the node
+ * @param blockNumber
+ * @return {Promise<{number: *, timestamp: *, hash: *, signer: *, txs: *}>}
+ */
+module.exports = async (blockNumber) => {
 
   let apiProvider = await providerService.get();
 

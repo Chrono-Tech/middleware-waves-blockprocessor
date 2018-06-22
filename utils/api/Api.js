@@ -4,6 +4,12 @@ const EventEmitter = require('events'),
   request = require('request-promise'),
   URL = require('url').URL;
 
+/**
+ * @service
+ * @param URI - the endpoint URI
+ * @description http provider for nem node
+ */
+
 class Api {
 
   constructor(URI) {
@@ -14,6 +20,10 @@ class Api {
     this._lastBlockCheck = null;
   }
 
+  /**
+   * @function
+   * @description watch for unconfirmed txs
+   */
   watchUnconfirmed() {
 
     if (this._watchIntervalId)
@@ -35,12 +45,24 @@ class Api {
     }, 10000);
   }
 
+  /**
+   * @function
+   * @description stop watching for unconfirmed txs
+   */
   stopWatchUnconfirmed() {
     clearInterval(this._watchIntervalId);
     this._watchIntervalId = null;
   }
 
-
+  /**
+   * @function
+   * @description internal method for making requests
+   * @param url - endpoint url
+   * @param method - the HTTP method
+   * @param body - the body of the request
+   * @return {Promise<*>}
+   * @private
+   */
   async _makeRequest(url, method = 'GET', body) {
     const options = {
       method: method,
@@ -51,6 +73,12 @@ class Api {
     return Promise.resolve(request(options)).timeout(10000);
   }
 
+  /**
+   * @function
+   * @description get block by it's number
+   * @param height
+   * @return {Promise<{}>}
+   */
   async getBlockByNumber(height) {
     const block = await this._makeRequest(`blocks/at/${height}`);
 
@@ -63,11 +91,20 @@ class Api {
     });
   }
 
+  /**
+   * @function
+   * @description get unconfirmed txs
+   * @return {Promise<*>}
+   */
   async getUnconfirmedTxs() {
     return await this._makeRequest('/transactions/unconfirmed');
   }
 
-
+  /**
+   * @function
+   * @description get blockchain current height
+   * @return {Promise<*>}
+   */
   async getHeight() {
     const data = await this._makeRequest('blocks/height');
     return data.height;

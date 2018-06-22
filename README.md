@@ -22,12 +22,23 @@ Which txs block processor filter?
 Block processor filter txs by specified user accounts (addresses). The addresses are presented in "wavesaccounts" collection with the following format:
 ```
 {
-    "_id" : ObjectId("599fd82bb9c86c7b74cc809c"),
-    "address" : "0x1cc5ceebda535987a4800062f67b9b78be0ef419",
-    "balance" : 0.0,
-    "created" : 1503647787853,
-    "isActive": true,
-    "assets": ["0x1cc5ceebda5359": 0.0]
+    "_id" : ObjectId("5b2ba7cd6021784c2c258bd0"),
+    "address" : "3N2CTeJiaQdRDtW4oixVUr1eJ6khZ8J87fq",
+    "created" : ISODate("2018-06-21T13:27:41.651Z"),
+    "isActive" : true,
+    "balance" : NumberLong(1595900000),
+    "assets" : {
+        "1231" : {
+            "balance" : 12312300,
+            "id" : "9TVgpmkFLgesFxBCoZW498MXFQDNHVAAYChvH5EPuY1W",
+            "decimals" : 2
+        },
+        "12111" : {
+            "balance" : 1222222222220.0,
+            "id" : "9hAjmSYdsMmmtsobDKNbhXtxeWweY1D9qsPz5CPDPxV8",
+            "decimals" : 1
+        }
+    }
 }
 ```
 
@@ -114,86 +125,100 @@ In order to make it possible to work with custom queries (in [rest](https://gith
 ##### wavesblocks
 The wavesvblocks collection stores only the most valuable information about the block. Here is the example of block:
 ```
-    "_id" : ObjectId("5ac0e9dca17b00e07504b379"),
-    "number" : 876,
-    "__v" : 0,
-    "blocksize" : "225",
-    "fee" : "0",
-    "generator" : "3JfE6tjeT7PnpuDQKxiVNLn4TJUFhuMaaT5",
-    "hash" : "2Sfxs38ST2M5g6FWTrzNSKUWMjS1woZM92nNHthTrrX6xQgRPrNfq5vqcjSF1LwFL7qfQpkE4BVWvJb6JPoRPW27",
-    "network" : "testnet",
-    "nxt-consensus" : {
-        "generation-signature" : "2uAufMuJhtbqWRd7mMnB5ibRFq4PsDoVk1X1UrhePvkX",
-        "base-target" : 225
-    },
-    "timestamp" : ISODate("2018-04-01T18:20:57.316Z"),
-    "transactionCount" : "0",
-    "transactions" : [],
-    "version" : "3"
+{
+    "_id" : "52qgHfxaWHvbmucyX4ukCXcNHbznZ4EdZwmtc32UM2tzEFYjZ3wddA3y5mM6C9m7oMu542zFXxircZVLq5dpmUkr",
+    "blocksize" : 225,
+    "created" : ISODate("2018-06-22T06:51:43.116Z"),
+    "fee" : NumberLong(0),
+    "number" : 364,
+    "timestamp" : ISODate("2018-06-22T06:49:42.013Z"),
+    "version" : 3
+}
 ```
 
 Here is the description:
 
 | field name | index | description|
 | ------ | ------ | ------ |
-| _id   | true | ObjectId
+| _id   | true | the signature of block
+| blocksize | false | size of block
+| created | false | date, when block has been cached by middleware
+| fee | false | total fee for block
 | number | true | block number
 | hash | true | signature of block
-| prevBlockHash | false | hash of prev block
 | timestamp | true | date, when block has been in blockchain
 | version | false | version (0x02 for Genesis block,, 0x03 for common block)
-| blocksize | false | size of block
-| fee | false | value of fee
-| created | true | date, when created record in database
-| transactionCount | false | count of transactions in block
-| generator | false | Generation signature
-| nxt-consensus.base-target | false | Base target
-| nxt-consensus.generation-signature | false | 	Consensus block length (always 40 bytes)
-
-
 
 
 ##### wavestxes
 The wavestxes collection stores only the most valuable information about the transaction. Here is the example of transaction:
 ```
-    "_id" : ObjectId("5ae3798bf0bd7f023dcfbc47"),
-    "__v" : 0,
-    "type" : "3",
-    "id" : "Gz1HSiHTzNAHVqph8eVm8DD6vqJzWa6VbH89pvCLsXjR",
-    "sender" : "3JfE6tjeT7PnpuDQKxiVNLn4TJUFhuMaaT5",
-    "senderPublicKey" : "GbGEY3XVc2ohdv6hQBukVKSTQyqP8rjQ8Kigkj6bL57S",
-    "fee" : "100000000",
-    "signature" : "51GgCFUib9qnWtjiX7ESZN49orTj79EEcZ8nSRZyjzzZaV1ksqVQAohgEQkbqBZyXpWBgfC329MeYHwH8MZHhfNj",
-    "assetId" : "Gz1HSiHTzNAHVqph8eVm8DD6vqJzWa6VbH89pvCLsXjR",
-    "hash" : "51GgCFUib9qnWtjiX7ESZN49orTj79EEcZ8nSRZyjzzZaV1ksqVQAohgEQkbqBZyXpWBgfC329MeYHwH8MZHhfNj",
+    "_id" : "3Z5Y5Dd6wPxYpSEj9N85bkEFpyNF9gcef4yX7Wj9ZKgmYCRDfkSqUSUyyEcHEvEMG54wwvBxEQ3tqQJLjB614rJW",
+    "amount" : NumberLong(4215000000000000),
+    "blockNumber" : 1,
+    "data" : [],
+    "fee" : NumberLong(0),
+    "recipient" : "3JuJRCEthv5KFLpWa1abtMDKAJSeviE2dEe",
+    "timestamp" : 1500635421931.0,
     "transfers" : [],
-    "timestamp" : 1524856745268.0,
-    "blockNumber" : 3901
+    "type" : 1
 ```
 
 Here is the description:
 
 | field name | index | description|
 | ------ | ------ | ------ |
-| _id   | true | the ObjectId
+| _id   | true | the signature of transnaction
 | blockNumber   | true | the block number
+| timestamp   | true | timestamp
 | amount   | false | amount
-| hash | true | signature of transaction
-| id | false | id of transaction
-| signature | false | signature of transaction (as in waves endpoint)
+| quantity   | false | quantity
+| decimals | false | decimals of asset
 | type | false | type of transaction
 | recipient | true | address of recipient
 | sender | true |  address of recipient
-| assetId | true | asset id
+| assetId | false | asset id
+| description | false | the asset description
 | feeAsset | false | fee of asset
 | attachment | false | attachment
-| senderPublicKey | false | public key of sender
+| alias | false | asset alias
+| transferCount | false | transfer count
+| totalAmount | false | total transfer amount
+| script | false | the tx script
 | fee | false | fee
-| transfers.recipient | true | address of transfers recipient
-| transfers.amount | false | amount of transfer
-| timestamp   | true | the timestamp when tx has been mined
-
-
+| minSponsoredAssetFee | false | minimum sponsor fee for asset
+| order1.sender | true | sender of order
+| order1.assetPair.amountAsset | false | asset amount
+| order1.assetPair.priceAsset | false |asset price
+| order1.orderType | false | type of order
+| order1.price | false | order price
+| order1.amount | false | order amount
+| order1.timestamp | false | timestamp
+| order1.expiration | false | expiration timestamp
+| order1.matcherFee | false | fee
+| order1.signature | false | signature
+| order2.sender | true | sender of order
+| order2.assetPair.amountAsset | false | asset amount
+| order2.assetPair.priceAsset | false |asset price
+| order2.orderType | false | type of order
+| order2.price | false | order price
+| order2.amount | false | order amount
+| order2.timestamp | false | timestamp
+| order2.expiration | false | expiration timestamp
+| order2.matcherFee | false | fee
+| order2.signature | false | signature
+| transfers[].recipient | true | address of transfers recipient
+| transfers[].amount | false | amount of transfer
+| lease.type | false | the type of lease
+| lease.sender | true | sender address
+| lease.fee | false | fee
+| lease.timestamp | false | timestamp
+| lease.signature | false | signature
+| lease.amount | false | amount
+| lease.recipient | false | recipient address
+| data[].key | false | the key (alias name)
+| data[].type | false | type of data
+| data[].value | false | value
 
 ### supported networks
 
@@ -241,7 +266,6 @@ The options are presented below:
 | NETWORK   | network name (alias)- is used for connecting via http node (see block processor section)
 | SYNC_SHADOW   | sync blocks in background
 | PROVIDERS   | the paths to http endpoints, written with comma sign
-| BLOCK_GENERATION_TIME | generation time for block
 
 License
 ----

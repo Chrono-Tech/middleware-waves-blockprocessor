@@ -8,12 +8,11 @@ const _ = require('lodash'),
   models = require('../models');
 
 /**
- * @service
- * @description filter txs by registered addresses
- * @param txs - an array of txs
- * @returns {Promise.<*>}
+ * @function
+ * @description extract participated addresses from tx
+ * @param tx
+ * @return {*}
  */
-
 const getAddrsFromTx = (tx) => {
   return _.chain([
     _.get(tx, 'sender'),
@@ -29,6 +28,12 @@ const getAddrsFromTx = (tx) => {
 };
 
 
+/**
+ * @service
+ * @description filter txs by registered addresses
+ * @param txs - an array of txs
+ * @returns {Promise.<*>}
+ */
 module.exports = async txs => {
 
   const addresses = _.chain(txs)

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "@waves/waves-api": "^0.28.4",
     "amqplib": "^0.5.1",
     "bluebird": "^3.5.0",
     "bunyan": "^1.8.10",
@@ -16,8 +15,7 @@
     "request-promise": "^4.2.2",
     "require-all": "^2.2.0",
     "semaphore": "^1.1.0",
-    "uniqid": "^4.1.1",
-    "waves-api": "^0.24.2"
+    "uniqid": "^4.1.1"
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint.js -c .eslintrc.js --ext .js --fix --ignore-path .eslintignore .",
@@ -31,8 +29,6 @@
     "chai": "^4.1.1",
     "eslint": "^4.6.1",
     "eslint-plugin-chronobank": "github:chronobank/eslint-plugin-chronobank",
-    "mocha": "^3.5.0",
-    "sockjs-client": "^1.1.4",
-    "webstomp-client": "^1.0.6"
+    "mocha": "^3.5.0"
   }
 }
