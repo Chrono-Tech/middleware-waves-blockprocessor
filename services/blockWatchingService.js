@@ -103,6 +103,7 @@ class BlockWatchingService {
    */
   async unconfirmedTxEvent (tx) {
     tx = await addUnconfirmedTx(tx);
+    tx.blockNumber = -1;
     this.events.emit('tx', tx);
   }
 
