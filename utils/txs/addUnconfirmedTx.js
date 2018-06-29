@@ -18,9 +18,9 @@ const bunyan = require('bunyan'),
 module.exports = async (tx) => {
 
   const toSaveTX = (new models.txModel(tx)).toObject();
-  toSaveTX._id = tx.signature;
+  toSaveTX._id = tx.id;
 
-  log.info(`inserting unconfirmed tx ${tx.signature}`);
+  log.info(`inserting unconfirmed tx ${tx.id}`);
   await models.txModel.create(toSaveTX);
   return tx;
 
