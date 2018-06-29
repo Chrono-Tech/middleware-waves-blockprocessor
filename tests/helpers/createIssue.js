@@ -4,18 +4,21 @@
  * Licensed under the AGPL Version 3 license.
  * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
-const requests = require('../services/nodeRequests'),
+const providerService = require('../services/providerService'),
   Promise = require('bluebird'),
   config = require('../config');
 
 
 module.exports = async (name, sender) => {
-  const tx = await requests.signIssueTransaction(config.dev.apiKey, name, name, sender, 
+
+  const provider = await providerService.get();
+
+  const tx = await provider.signIssueTransaction(config.dev.apiKey, name, name, sender,
     100000000, 3, 10000000, false);
-  await requests.sendIssueTransaction(config.dev.apiKey, tx);
+  await provider.sendIssueTransaction(config.dev.apiKey, tx);
   await new Promise(res => {
     const check = async () => {
-      const initBalance = await requests.getBalanceByAddressAndAsset(sender, tx.assetId);
+      const initBalance = await provider.getBalanceByAddressAndAsset(sender, tx.assetId);
       if (initBalance > 0) 
         return res();
       else {
