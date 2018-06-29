@@ -48,7 +48,7 @@ const updateDbStateWithBlock = async (block) => {
 
   let txs = block.transactions.map(tx => {
     const transformedTx = (new models.txModel(tx)).toObject();
-    transformedTx._id = tx.signature;
+    transformedTx._id = tx.id;
     return transformedTx;
   });
 
