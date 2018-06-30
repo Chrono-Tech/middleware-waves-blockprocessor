@@ -39,7 +39,8 @@ const config = {
         };
       })
       .value(),
-    network: process.env.NETWORK || 'testnet'
+    network: process.env.NETWORK || 'testnet',
+    blockGenerationTime: parseInt(process.env.BLOCK_GENERATION_TIME) || 60000
   }
 };
 

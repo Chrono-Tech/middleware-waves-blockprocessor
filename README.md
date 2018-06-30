@@ -249,6 +249,7 @@ NETWORK=development
 
 SYNC_SHADOW=1
 PROVIDERS=http://localhost:6869,http://testnode1.wavesnodes.com:6869
+BLOCK_GENERATION_TIME=60000
 ```
 
 The options are presented below:
@@ -266,8 +267,7 @@ The options are presented below:
 | NETWORK   | network name (alias)- is used for connecting via http node (see block processor section)
 | SYNC_SHADOW   | sync blocks in background
 | PROVIDERS   | the paths to http endpoints, written with comma sign
-
-License
+| BLOCK_GENERATION_TIME   | the time, at which microblocks are going to be included in main block (or the network time, when block should be mined)
 ----
  [GNU AGPLv3](LICENSE)
 
