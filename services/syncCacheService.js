@@ -66,7 +66,7 @@ class SyncCacheService {
           if (bucket.length === 2 && bucket.length !== (_.last(bucket) > bucket[0] ? _.last(bucket) - bucket[0] : bucket[0] - _.last(bucket)) + 1) {
 
             let blocksToProcess = [];
-            for (let blockNumber = _.last(bucket); blockNumber >= bucket[0]; blockNumber--)
+            for (let blockNumber = _.last(bucket); blockNumber >= bucket[0] && blockNumber > 0; blockNumber--)
               blocksToProcess.push(blockNumber);
 
             _.pullAll(bucket, bucket);
@@ -96,7 +96,7 @@ class SyncCacheService {
     let apiProvider = await providerService.get();
     let lastBlock = await apiProvider.getBlockByNumber(_.last(bucket));
 
-    if (!lastBlock || (_.last(bucket) !== 0 && !lastBlock.number))
+    if (!lastBlock || (_.last(bucket) !== 1 && !lastBlock.number))
       return await Promise.delay(10000);
 
     log.info(`waves provider took chuck of blocks ${bucket[0]} - ${_.last(bucket)}`);

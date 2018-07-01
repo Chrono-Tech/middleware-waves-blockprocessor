@@ -65,12 +65,12 @@ module.exports = async function () {
   if (currentNodeHeight === -1)
     return Promise.reject({code: 0});
 
-  let missedBuckets = await blockValidator(0, currentNodeHeight - 2, 100000);
+  let missedBuckets = await blockValidator(1, currentNodeHeight - 2, 100000);
   missedBuckets = _.reverse(missedBuckets);
 
   return {
     missedBuckets: missedBuckets,
-    height: currentNodeHeight === 0 ? currentNodeHeight : currentNodeHeight - 1
+    height: currentNodeHeight === 1 ? currentNodeHeight : currentNodeHeight - 1
   };
 
 };

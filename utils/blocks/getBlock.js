@@ -6,6 +6,7 @@
 
 const Promise = require('bluebird'),
   _ = require('lodash'),
+  config = require('../../config'),
   providerService = require('../../services/providerService');
 
 
@@ -23,6 +24,9 @@ module.exports = async (blockNumber) => {
 
   if (!rawBlock)
     return Promise.reject({code: 2});
+
+  if(Date.now() - _.get(rawBlock, 'timestamp', Date.now()) < config.node.blockGenerationTime)
+    return Promise.reject({code: 0});
 
   const txs = rawBlock.transactions.map(tx =>
     _.merge(tx, {
