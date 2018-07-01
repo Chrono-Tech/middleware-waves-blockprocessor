@@ -129,8 +129,7 @@ class BlockWatchingService {
     if (block === this.currentHeight - 1)
       return Promise.reject({code: 0});
 
-    const lastBlock = this.currentHeight === 0 ? null :
-      await apiProvider.getBlockByNumber(this.currentHeight - 1);
+    const lastBlock = await apiProvider.getBlockByNumber(this.currentHeight - 1);
 
     if (this.lastBlockHash !== null && this.currentHeight > 1) {
       let savedBlock = await models.blockModel.count({_id: lastBlock.signature});
