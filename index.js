@@ -18,7 +18,7 @@ const mongoose = require('mongoose'),
   filterTxsByAccountService = require('./services/filterTxsByAccountService'),
   amqp = require('amqplib'),
   bunyan = require('bunyan'),
-  log = bunyan.createLogger({name: 'core.blockProcessor'});
+  log = bunyan.createLogger({name: 'core.blockProcessor', level: config.logs.level});
 
 
 mongoose.Promise = Promise;
@@ -78,6 +78,7 @@ const init = async function () {
     }));
   };
   let txEventCallback = async tx => {
+
     let filtered = await filterTxsByAccountService([tx]);
     await Promise.all(filtered.map(item => {
       channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
@@ -99,12 +100,12 @@ const init = async function () {
     });
   });
 
-    const blockWatchingService = new BlockWatchingService(endBlock);
+  const blockWatchingService = new BlockWatchingService(endBlock);
 
-    blockWatchingService.events.on('block', blockEventCallback);
-    blockWatchingService.events.on('tx', txEventCallback);
+  blockWatchingService.events.on('block', blockEventCallback);
+  blockWatchingService.events.on('tx', txEventCallback);
 
-    await blockWatchingService.startSync(endBlock);
+  await blockWatchingService.startSync(endBlock);
 
 };
 

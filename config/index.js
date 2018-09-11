@@ -41,6 +41,9 @@ const config = {
       .value(),
     network: process.env.NETWORK || 'testnet',
     blockGenerationTime: parseInt(process.env.BLOCK_GENERATION_TIME) || 60000
+  },
+  logs: {
+    level: process.env.LOG_LEVEL || 'info'
   }
 };
 
