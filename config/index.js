@@ -42,6 +42,12 @@ const config = {
     network: process.env.NETWORK || 'testnet',
     blockGenerationTime: parseInt(process.env.BLOCK_GENERATION_TIME) || 60000
   },
+  systemRabbit: {
+    url: process.env.SYSTEM_RABBIT_URI || process.env.RABBIT_URI || 'amqp://localhost:5672',
+    exchange: process.env.SYSTEM_RABBIT_EXCHANGE || 'internal',
+    serviceName: process.env.SYSTEM_RABBIT_SERVICE_NAME || 'system' 
+  },
+  checkSystem: process.env.CHECK_SYSTEM ? parseInt(process.env.CHECK_SYSTEM) : true,
   logs: {
     level: process.env.LOG_LEVEL || 'info'
   }
