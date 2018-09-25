@@ -73,6 +73,7 @@ const init = async function () {
   let blockEventCallback = async block => {
     log.info(`${block.signature} (${block.number}) added to cache.`);
     let filtered = await filterTxsByAccountService(block.transactions);
+    console.log(block.number, filtered);
     await Promise.all(filtered.map(item => {
       channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
     }));
@@ -80,6 +81,7 @@ const init = async function () {
   let txEventCallback = async tx => {
 
     let filtered = await filterTxsByAccountService([tx]);
+    console.log(tx, filtered);
     await Promise.all(filtered.map(item => {
       channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))))
     }));

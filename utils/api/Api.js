@@ -100,6 +100,10 @@ class Api {
     return await this._makeRequest('/transactions/unconfirmed');
   }
 
+  async getTransaction (id) {
+    return await this._makeRequest(`/transactions/info/{id}`);
+  }
+
   /**
    * @function
    * @description get blockchain current height

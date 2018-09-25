@@ -13,7 +13,7 @@ const bunyan = require('bunyan'),
   syncCacheServiceInterface = require('middleware-common-components/interfaces/blockProcessor/syncCacheServiceInterface'),
   providerService = require('../services/providerService'),
   allocateBlockBuckets = require('../utils/blocks/allocateBlockBuckets'),
-  config = require('../../config'),
+  config = require('../config'),
   log = bunyan.createLogger({name: 'services.syncCacheService', level: config.logs.level});
 
 /**
