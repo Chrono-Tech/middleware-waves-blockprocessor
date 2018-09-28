@@ -11,7 +11,7 @@ const bunyan = require('bunyan'),
   providerServiceInterface = require('middleware-common-components/interfaces/blockProcessor/providerServiceInterface'),
   Promise = require('bluebird'),
   EventEmitter = require('events'),
-  log = bunyan.createLogger({name: 'app.services.providerService'});
+  log = bunyan.createLogger({name: 'services.providerService', level: config.logs.level});
 
 /**
  * @service
@@ -21,7 +21,7 @@ const bunyan = require('bunyan'),
 
 class providerService {
 
-  constructor() {
+  constructor () {
     this.events = new EventEmitter();
     this.connector = null;
 
@@ -35,7 +35,7 @@ class providerService {
    * @description reset the current connection
    * @return {Promise<void>}
    */
-  async resetConnector() {
+  async resetConnector () {
     this.switchConnector();
     this.events.emit('disconnected');
   }
@@ -45,7 +45,7 @@ class providerService {
    * @description choose the connector
    * @return {Promise<null|*>}
    */
-  async switchConnector() {
+  async switchConnector () {
 
     const providerURI = await Promise.any(config.node.providers.map(async providerURI => {
       const apiProvider = new Api(providerURI);
@@ -88,7 +88,7 @@ class providerService {
    * @description safe connector switching, by moving requests to
    * @return {Promise<bluebird>}
    */
-  async switchConnectorSafe() {
+  async switchConnectorSafe () {
 
     return new Promise(res => {
       sem.take(async () => {
@@ -104,7 +104,7 @@ class providerService {
    * @description
    * @return {Promise<*|bluebird>}
    */
-  async get() {
+  async get () {
     return this.connector || await this.switchConnectorSafe();
   }
 

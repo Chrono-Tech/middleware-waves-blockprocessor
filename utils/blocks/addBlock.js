@@ -8,7 +8,8 @@ const bunyan = require('bunyan'),
   sem = require('semaphore')(3),
   Promise = require('bluebird'),
   models = require('../../models'),
-  log = bunyan.createLogger({name: 'app.services.addBlock'});
+  config = require('../../config'),
+  log = bunyan.createLogger({name: 'utils.blocks.addBlock', level: config.logs.level});
 
 /**
  * @function
