@@ -268,6 +268,10 @@ The options are presented below:
 | SYNC_SHADOW   | sync blocks in background
 | PROVIDERS   | the paths to http endpoints, written with comma sign
 | BLOCK_GENERATION_TIME   | the time, at which microblocks are going to be included in main block (or the network time, when block should be mined)
+| SYSTEM_RABBIT_URI   | rabbitmq URI connection string for infrastructure
+| SYSTEM_RABBIT_SERVICE_NAME   | rabbitmq service name for infrastructure
+| SYSTEM_RABBIT_EXCHANGE   | rabbitmq exchange name for infrastructure
+| CHECK_SYSTEM | check infrastructure or not (default = true)
 ----
  [GNU AGPLv3](LICENSE)
 

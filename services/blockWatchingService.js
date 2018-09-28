@@ -14,7 +14,8 @@ const bunyan = require('bunyan'),
   removeUnconfirmedTxs = require('../utils/txs/removeUnconfirmedTxs'),
   EventEmitter = require('events'),
   blockWatchingInterface = require('middleware-common-components/interfaces/blockProcessor/blockWatchingServiceInterface'),
-  log = bunyan.createLogger({name: 'shared.services.blockWatchingService'});
+  config = require('../config'),
+  log = bunyan.createLogger({name: 'services.blockWatchingService', level: config.logs.level});
 
 /**
  * @service

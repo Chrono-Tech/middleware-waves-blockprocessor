@@ -189,6 +189,9 @@ class Api {
     return _.get(result, 'balance', null);
   };
 
+  async getTransaction (id) {
+    return await this._makeRequest(`/transactions/info/${id}`);
+  }
 
 }
 
