@@ -26,6 +26,7 @@ module.exports = (ctx) => {
   it('validate block processor caching ability', async () => {
     await waitTransaction(sender.sendTransaction.bind(sender, ctx.accounts[0], ctx.accounts[1], 10)); 
     let blockCount = await models.blockModel.count();
+    await Promise.delay(30000);
     expect(blockCount).to.be.greaterThan(1);
   });
 
@@ -39,19 +40,19 @@ module.exports = (ctx) => {
     await waitBlock(); 
 
     ctx.blockProcessorPid = spawn('node', ['index.js'], {env: process.env, stdio: 'ignore'});
-    await Promise.delay(10000);
+    await Promise.delay(35000);
     let newBlockCount = await models.blockModel.count();
     expect(newBlockCount).to.be.greaterThan(oldBlockCount);
   });
 
 
-  it('kill again, push wrong blocks and restart block processor', async () => {
+  it('kill again, wipe some blocks and restart block processor', async () => {
 
     ctx.blockProcessorPid.kill();
 
     let state = {};
     state.blocks = await models.blockModel.find({}).sort({number: -1}).limit(6);
-    state.txs = await models.txModel.find({}).sort({number: -1});
+    state.txs = await models.txModel.find({blockNumber: {$in: state.blocks.map(block=>block.number)}}).sort({number: -1});
 
     let lastBlocks = await models.blockModel.find({}).sort({number: -1}).limit(6);
     for (let block of lastBlocks) {
@@ -66,13 +67,14 @@ module.exports = (ctx) => {
         tx = tx.toObject();
         await models.txModel.create(tx);
       }
-
     }
 
-    ctx.blockProcessorPid = spawn('node', ['index.js'], {env: process.env, stdio: 'ignore'});
-    await Promise.delay(5000);
 
-    let newBlocks = await models.blockModel.find({number: {'$lte': state.blocks[0].number}}).sort({number: -1}).limit(6);
+    ctx.blockProcessorPid = spawn('node', ['index.js'], {env: process.env, stdio: 'ignore'});
+    await Promise.delay(60000);
+
+    //let newBlocks = await models.blockModel.find({number: {'$lte': state.blocks[0].number}}).sort({number: -1}).limit(6);
+    let newBlocks = await models.blockModel.find({number: {$in: state.blocks.map(block=>block.number)}}).sort({number: -1}).limit(6);
     state.blocks = _.chain(state.blocks).sortBy('_id').map(block => _.omit(block.toObject(), ['_id', 'created', '__v'])).value();
     newBlocks = _.chain(newBlocks).sortBy('_id').map(block => _.omit(block.toObject(), ['_id', 'created', '__v'])).value();
 
@@ -81,15 +83,14 @@ module.exports = (ctx) => {
     
 
 
-    let newTxs = await models.txModel.find({blockNumber: {'$lte': state.txs[0].blockNumber}});
-    state.txs = _.chain(state.txs).sortBy('_id').map(tx => tx.toObject()).value();
-    newTxs = _.chain(newTxs).sortBy('_id').map(tx => tx.toObject()).value();
+    let newTxs = await models.txModel.find({blockNumber: {$in: state.blocks.map(block=>block.number)}});
+    state.txs = _.chain(state.txs).sortBy('timestamp').map(tx => tx.toObject()).value();
+    newTxs = _.chain(newTxs).sortBy('timestamp').map(tx => tx.toObject()).value();
 
-    for (let number = 0; number < state.txs.length; number++) {
-      expect(_.isEqual(state.txs[number], newTxs[number])).to.eq(true);
-    }
+    for (let number = 0; number < state.txs.length; number++)
+      expect(state.txs[number]._id).to.eq(newTxs[number]._id);
+
   });
-
 
   after(async () => {
     ctx.blockProcessorPid.kill();

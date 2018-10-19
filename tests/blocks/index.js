@@ -87,7 +87,7 @@ module.exports = (ctx) => {
     const height = await instance.getHeight();
 
     let blocks = [];
-    for (let i = 0; i < height - 2; i++)
+    for (let i = 1; i < height - 2; i++)
       blocks.push(i);
     blocks = _.shuffle(blocks);
     const blocksToRemove = _.take(blocks, 50);
