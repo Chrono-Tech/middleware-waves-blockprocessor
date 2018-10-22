@@ -10,11 +10,11 @@ const EventEmitter = require('events'),
  * @description http provider for nem node
  */
 
-class Api {
+class Api extends EventEmitter {
 
   constructor (URI) {
+    super();
     this.http = URI.http;
-    this.events = new EventEmitter();
     this._watchIntervalId = null;
     this._unconfirmedTxs = [];
     this._lastBlockCheck = null;
@@ -39,7 +39,7 @@ class Api {
       txs = _.reject(txs, tx => savedTxIds.includes(tx.id));
       this._unconfirmedTxs.push(...txs);
       txs.forEach(tx => {
-        this.events.emit('unconfirmedTx', tx);
+        this.emit('unconfirmedTx', tx);
       });
 
     }, 10000);
@@ -101,7 +101,7 @@ class Api {
   }
 
   async getTransaction (id) {
-    return await this._makeRequest(`/transactions/info/{id}`);
+    return await this._makeRequest('/transactions/info/{id}');
   }
 
   /**

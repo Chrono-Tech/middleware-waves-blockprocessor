@@ -9,12 +9,11 @@ const config = require('../../config'),
   spawn = require('child_process').spawn,
   expect = require('chai').expect,
   Promise = require('bluebird'),
+  _ = require('lodash'),
   SyncCacheService = require('../../services/syncCacheService'),
   BlockWatchingService = require('../../services/blockWatchingService'),
   providerService = require('../../services/providerService'),
-  sender = require('../utils/sender'),
-  waitTransaction = require('../utils/waitTransaction'),
-  _ = require('lodash');
+  sender = require('../utils/sender');
 
 module.exports = (ctx) => {
 
@@ -38,14 +37,13 @@ module.exports = (ctx) => {
     const memUsage = process.memoryUsage().heapUsed / 1024 / 1024;
     const syncCacheService = new SyncCacheService();
     await syncCacheService.start();
-    await new Promise(res => syncCacheService.events.once('end', res));
+    await new Promise(res => syncCacheService.once('end', res));
     global.gc();
     await Promise.delay(10000);
     const memUsage2 = process.memoryUsage().heapUsed / 1024 / 1024;
 
     expect(memUsage2 - memUsage).to.be.below(3);
   });
-
 
   it('validate block watching service performance', async () => {
     const instance = await providerService.get();
@@ -71,7 +69,7 @@ module.exports = (ctx) => {
   });
 
   it('validate tx notification speed', async () => {
-    ctx.blockProcessorPid = spawn('node', ['index.js'], {env: process.env, stdio: 'ignore'});
+    ctx.blockProcessorPid = spawn('node', ['index.js'], {env: _.merge({BLOCK_GENERATION_TIME: 30000}, process.env), stdio: 'ignore'});
     await Promise.delay(10000);
     await new models.accountModel({address: ctx.accounts[0]}).save();
 
@@ -81,15 +79,10 @@ module.exports = (ctx) => {
 
     await Promise.all([
       (async () => {
-        await ctx.amqp.channel.assertQueue(
-          `app_${config.rabbit.serviceName}_test_performance.transaction`);
-        await ctx.amqp.channel.bindQueue(
-          `app_${config.rabbit.serviceName}_test_performance.transaction`, 'events', 
-          `${config.rabbit.serviceName}_transaction.${ctx.accounts[0]}`);
+        await ctx.amqp.channel.assertQueue(`app_${config.rabbit.serviceName}_test_performance.transaction`);
+        await ctx.amqp.channel.bindQueue(`app_${config.rabbit.serviceName}_test_performance.transaction`, 'events', `${config.rabbit.serviceName}_transaction.${ctx.accounts[0]}`);
         await new Promise(res =>
-          ctx.amqp.channel.consume(
-            `app_${config.rabbit.serviceName}_test_performance.transaction`, 
-            async data => {
+          ctx.amqp.channel.consume(`app_${config.rabbit.serviceName}_test_performance.transaction`, async data => {
 
               if (!data)
                 return;
@@ -100,8 +93,7 @@ module.exports = (ctx) => {
                 return;
 
               end = Date.now();
-              await ctx.amqp.channel.deleteQueue(
-                `app_${config.rabbit.serviceName}_test_performance.transaction`);
+              await ctx.amqp.channel.deleteQueue(`app_${config.rabbit.serviceName}_test_performance.transaction`);
               res();
 
             }, {noAck: true})
@@ -114,7 +106,7 @@ module.exports = (ctx) => {
       })()
     ]);
 
-    expect(end - start).to.be.below(500);
+    expect(end - start).to.be.below(60000); //block delay
     await Promise.delay(15000);
     ctx.blockProcessorPid.kill();
   });

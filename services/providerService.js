@@ -19,10 +19,10 @@ const bunyan = require('bunyan'),
  * @returns Object<ProviderService>
  */
 
-class providerService {
+class providerService extends EventEmitter {
 
   constructor () {
-    this.events = new EventEmitter();
+    super();
     this.connector = null;
 
     if (config.node.providers.length > 1)
@@ -37,7 +37,7 @@ class providerService {
    */
   async resetConnector () {
     this.switchConnector();
-    this.events.emit('disconnected');
+    this.emit('disconnected');
   }
 
   /**
@@ -60,7 +60,7 @@ class providerService {
       return;
 
     this.connector = new Api(providerURI);
-    this.connector.events.on('disconnect', () => this.resetConnector());
+    this.connector.on('disconnect', () => this.resetConnector());
 
     this.pingIntervalId = setInterval(async () => {
 
@@ -75,8 +75,8 @@ class providerService {
 
     await this.connector.watchUnconfirmed();
 
-    this.connector.events.on('unconfirmedTx', tx => {
-      this.events.emit('unconfirmedTx', tx);
+    this.connector.on('unconfirmedTx', tx => {
+      this.emit('unconfirmedTx', tx);
     });
 
 

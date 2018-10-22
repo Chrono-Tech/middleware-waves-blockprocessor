@@ -87,7 +87,7 @@ module.exports = (ctx) => {
     const height = await instance.getHeight();
 
     let blocks = [];
-    for (let i = 0; i < height - 2; i++)
+    for (let i = 1; i < height - 2; i++)
       blocks.push(i);
     blocks = _.shuffle(blocks);
     const blocksToRemove = _.take(blocks, 50);
@@ -131,12 +131,22 @@ module.exports = (ctx) => {
 
   it('check filterTxsByAccountService', async () => {
     const instance = await providerService.get();
-    const height = await instance.getHeight();
-    for (let i = 0; i < 2; i++) {
-      let block = await getBlock(height - i);
-      await addBlock(block);
+    let height = await instance.getHeight();
+    let tx = null;
+
+    while(!tx){
+      let newHeight = await instance.getHeight();
+
+      for(let i = height; i < newHeight;i++){
+        let block = await getBlock(i);
+        await addBlock(block);
+        tx = await models.txModel.findOne({sender: {$ne: null}});
+        height = newHeight;
+      }
+
+      await Promise.delay(5000);
     }
-    const tx = await models.txModel.findOne();
+
     await models.accountModel.create({address: tx.sender});
 
     let filtered = await filterTxsByAccountService([tx]);

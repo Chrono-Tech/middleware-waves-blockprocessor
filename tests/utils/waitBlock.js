@@ -3,10 +3,8 @@
 * Licensed under the AGPL Version 3 license.
 * @author Kirill Sergeev <cloudkserg11@gmail.com>
 */
-const _ = require('lodash'),
-  config = require('../config'),
-  Api = require('./api/Api'),
-  providerService = require('./services/providerService');
+const config = require('../config'),
+  Api = require('./api/Api');
 
 /**
  * @param {Function} sendTransaction
