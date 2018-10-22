@@ -5,7 +5,8 @@
  */
 
 require('dotenv/config');
-process.env.LOG_LEVEL = 'error';
+process.env.LOG_LEVEL = 'fatal';
+process.env.BLOCK_GENERATION_TIME = '1010';
 
 const config = require('./config'),
   models = require('../models'),
@@ -47,6 +48,16 @@ describe('core/blockProcessor', function () {
         json: true,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+      }).catch(() => {
+        console.log('github api is not available, will download the 0.14.6 version of node');
+        return {
+          assets: [
+            {
+              url: 'https://api.github.com/repos/wavesplatform/Waves/releases/assets/8932223',
+              browser_download_url: 'https://github.com/wavesplatform/Waves/releases/download/v0.14.6/waves-all-0.14.6.jar'
+            }
+          ]
         }
       });
 

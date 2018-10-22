@@ -102,7 +102,6 @@ module.exports = (ctx) => {
       (async () => {
 
         tx = await sender.sendTransaction(ctx.accounts[0], ctx.accounts[1], 10);
-        console.log('sent tx:', tx.id, Date.now());
         start = Date.now();
       })()
     ]);
