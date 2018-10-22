@@ -13,7 +13,8 @@ const bunyan = require('bunyan'),
   syncCacheServiceInterface = require('middleware-common-components/interfaces/blockProcessor/syncCacheServiceInterface'),
   providerService = require('../services/providerService'),
   allocateBlockBuckets = require('../utils/blocks/allocateBlockBuckets'),
-  log = bunyan.createLogger({name: 'shared.services.syncCacheService'});
+  config = require('../config'),
+  log = bunyan.createLogger({name: 'services.syncCacheService', level: config.logs.level});
 
 /**
  * @service
@@ -21,17 +22,17 @@ const bunyan = require('bunyan'),
  * @returns {Promise.<*>}
  */
 
-class SyncCacheService {
+class SyncCacheService extends EventEmitter {
 
-  constructor() {
-    this.events = new EventEmitter();
+  constructor () {
+    super();
   }
 
   /** @function
    * @description start syncing process
    * @return {Promise<*>}
    */
-  async start() {
+  async start () {
     await this.indexCollection();
     let data = await allocateBlockBuckets();
     this.doJob(data.missedBuckets);
@@ -43,7 +44,7 @@ class SyncCacheService {
    * @description index all collections in mongo
    * @return {Promise<void>}
    */
-  async indexCollection() {
+  async indexCollection () {
     log.info('indexing...');
     await models.blockModel.init();
     await models.accountModel.init();
@@ -57,7 +58,7 @@ class SyncCacheService {
    * @param buckets - array of blocks
    * @return {Promise<void>}
    */
-  async doJob(buckets) {
+  async doJob (buckets) {
 
     while (buckets.length)
       try {
@@ -78,7 +79,7 @@ class SyncCacheService {
             _.pull(buckets, bucket);
         }
 
-        this.events.emit('end');
+        this.emit('end');
 
       } catch (err) {
         log.error(err);
@@ -91,7 +92,7 @@ class SyncCacheService {
    * @param bucket
    * @return {Promise<*>}
    */
-  async runPeer(bucket) {
+  async runPeer (bucket) {
 
     let apiProvider = await providerService.get();
     let lastBlock = await apiProvider.getBlockByNumber(_.last(bucket));
@@ -105,7 +106,7 @@ class SyncCacheService {
       let block = await getBlock(blockNumber);
       await addBlock(block);
       _.pull(bucket, blockNumber);
-      this.events.emit('block', block);
+      this.emit('block', block);
     });
   }
 }

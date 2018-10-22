@@ -9,7 +9,8 @@ const _ = require('lodash'),
   Promise = require('bluebird'),
   models = require('../../models'),
   providerService = require('../../services/providerService'),
-  log = bunyan.createLogger({name: 'shared.utils.allocateBlockBuckets'});
+  config = require('../../config'),
+  log = bunyan.createLogger({name: 'utils.blocks.allocateBlockBuckets', level: config.logs.level});
 
 /**
  * @function

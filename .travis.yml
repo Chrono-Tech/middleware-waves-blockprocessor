@@ -15,21 +15,10 @@ before_install:
   - sudo apt-get install python2.7 git-all pkg-config libncurses5-dev libssl-dev libnss3-dev libexpat-dev libc6-dev openjdk-8-jre -y
 
 install:
-  - export BLOCK_GENERATION_TIME=1000
-  - sudo rabbitmq-plugins enable rabbitmq_web_stomp
   - npm install
-  - npm install -g pm2
 
-before_script:
-    - cd $TRAVIS_BUILD_DIR/tests/node && java -jar waves.jar waves-devnet.conf > /dev/null &
-    - cd $TRAVIS_BUILD_DIR && pm2 start index.js
 script:
-  - sleep 200 && npm test -- --coverage
-
-after_script:
-  - pm2 logs --nostream
-  - pm2 kill && pkill PM2
-
+  - npm test -- --coverage
 
 after_success:
   - FULL_GCR_KEY="-----BEGIN PRIVATE KEY-----\n"$GCR_KEY"\n-----END PRIVATE KEY-----\n"

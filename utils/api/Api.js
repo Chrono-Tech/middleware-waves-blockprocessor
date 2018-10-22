@@ -10,11 +10,11 @@ const EventEmitter = require('events'),
  * @description http provider for nem node
  */
 
-class Api {
+class Api extends EventEmitter {
 
-  constructor(URI) {
+  constructor (URI) {
+    super();
     this.http = URI.http;
-    this.events = new EventEmitter();
     this._watchIntervalId = null;
     this._unconfirmedTxs = [];
     this._lastBlockCheck = null;
@@ -24,7 +24,7 @@ class Api {
    * @function
    * @description watch for unconfirmed txs
    */
-  watchUnconfirmed() {
+  watchUnconfirmed () {
 
     if (this._watchIntervalId)
       return;
@@ -39,7 +39,7 @@ class Api {
       txs = _.reject(txs, tx => savedTxIds.includes(tx.id));
       this._unconfirmedTxs.push(...txs);
       txs.forEach(tx => {
-        this.events.emit('unconfirmedTx', tx);
+        this.emit('unconfirmedTx', tx);
       });
 
     }, 10000);
@@ -49,7 +49,7 @@ class Api {
    * @function
    * @description stop watching for unconfirmed txs
    */
-  stopWatchUnconfirmed() {
+  stopWatchUnconfirmed () {
     clearInterval(this._watchIntervalId);
     this._watchIntervalId = null;
   }
@@ -63,7 +63,7 @@ class Api {
    * @return {Promise<*>}
    * @private
    */
-  async _makeRequest(url, method = 'GET', body) {
+  async _makeRequest (url, method = 'GET', body) {
     const options = {
       method: method,
       body: body,
@@ -79,7 +79,7 @@ class Api {
    * @param height
    * @return {Promise<{}>}
    */
-  async getBlockByNumber(height) {
+  async getBlockByNumber (height) {
     const block = await this._makeRequest(`blocks/at/${height}`);
 
     if (!block || !block.height)
@@ -96,8 +96,12 @@ class Api {
    * @description get unconfirmed txs
    * @return {Promise<*>}
    */
-  async getUnconfirmedTxs() {
+  async getUnconfirmedTxs () {
     return await this._makeRequest('/transactions/unconfirmed');
+  }
+
+  async getTransaction (id) {
+    return await this._makeRequest('/transactions/info/{id}');
   }
 
   /**
@@ -105,7 +109,7 @@ class Api {
    * @description get blockchain current height
    * @return {Promise<*>}
    */
-  async getHeight() {
+  async getHeight () {
     const data = await this._makeRequest('blocks/height');
     return data.height;
   }

@@ -14,7 +14,8 @@ const bunyan = require('bunyan'),
   removeUnconfirmedTxs = require('../utils/txs/removeUnconfirmedTxs'),
   EventEmitter = require('events'),
   blockWatchingInterface = require('middleware-common-components/interfaces/blockProcessor/blockWatchingServiceInterface'),
-  log = bunyan.createLogger({name: 'shared.services.blockWatchingService'});
+  config = require('../config'),
+  log = bunyan.createLogger({name: 'services.blockWatchingService', level: config.logs.level});
 
 /**
  * @service
@@ -23,11 +24,11 @@ const bunyan = require('bunyan'),
  * @returns Object<BlockWatchingService>
  */
 
-class BlockWatchingService {
+class BlockWatchingService extends EventEmitter {
 
 
   constructor (currentHeight) {
-    this.events = new EventEmitter();
+    super();
     this.currentHeight = currentHeight;
     this.isSyncing = false;
   }
@@ -50,8 +51,8 @@ class BlockWatchingService {
     this.lastBlockHash = null;
     this.doJob();
 
-    this.unconfirmedTxEventCallback = result => this.unconfirmedTxEvent(result).catch();
-    providerService.events.on('unconfirmedTx', this.unconfirmedTxEventCallback);
+    this.unconfirmedTxEventCallback = result => this.unconfirmedTxEvent(result).catch(()=>{});
+    providerService.on('unconfirmedTx', this.unconfirmedTxEventCallback);
 
   }
 
@@ -69,7 +70,7 @@ class BlockWatchingService {
 
         this.currentHeight++;
         this.lastBlockHash = block.hash;
-        this.events.emit('block', block);
+        this.emit('block', block);
       } catch (err) {
 
         if (err && err.code === 0) {
@@ -104,7 +105,7 @@ class BlockWatchingService {
   async unconfirmedTxEvent (tx) {
     tx = await addUnconfirmedTx(tx);
     tx.blockNumber = -1;
-    this.events.emit('tx', tx);
+    this.emit('tx', tx);
   }
 
   /**
