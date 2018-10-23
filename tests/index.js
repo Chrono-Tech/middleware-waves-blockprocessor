@@ -1,90 +1,104 @@
 /**
- *
  * Copyright 2017–2018, LaborX PTY
  * Licensed under the AGPL Version 3 license.
  * @author Kirill Sergeev <cloudkserg11@gmail.com>
  */
+
+require('dotenv/config');
+process.env.LOG_LEVEL = 'fatal';
+process.env.BLOCK_GENERATION_TIME = '1010';
+
 const config = require('./config'),
+  models = require('../models'),
+  fuzzTests = require('./fuzz'),
+  fs = require('fs'),
+  request = require('request-promise'),
+  spawn = require('child_process').spawn,
+  performanceTests = require('./performance'),
+  featuresTests = require('./features'),
+  blockTests = require('./blocks'),
   Promise = require('bluebird'),
   mongoose = require('mongoose'),
-  expect = require('chai').expect,
-  models = require('../models'),
   amqp = require('amqplib'),
-  connectToQueue = require('./helpers/connectToQueue'),
-  clearQueues = require('./helpers/clearQueues'),
-  consumeMessages = require('./helpers/consumeMessages'),
-  providerService = require('./services/providerService'),
-  createIssue = require('./helpers/createIssue'),
-  ASSET_NAME = 'LLLLLLLLLLLL';
-
-let accounts, amqpInstance, assetId;
+  ctx = {};
 
 mongoose.Promise = Promise;
-mongoose.accounts = mongoose.createConnection(config.mongo.accounts.uri);
 mongoose.connect(config.mongo.data.uri, {useMongoClient: true});
+mongoose.accounts = mongoose.createConnection(config.mongo.accounts.uri, {useMongoClient: true});
 
 
-const checkMessage = (content) => {
-  expect(content).to.contain.all.keys(
-    'id',
-    'signature',
-    'timestamp',
-    'type',
-    'sender',
-    'recipient',
-    'amount'
-  );
-  expect(content.sender).to.equal(accounts[0]);
-  expect(content.recipient).to.equal(accounts[1]);
-
-  return true;
-};
-
-describe('core/block processor', function () {
+describe('core/blockProcessor', function () {
 
   before(async () => {
     models.init();
-    await models.accountModel.remove();
-    amqpInstance = await amqp.connect(config.rabbit.url);
+    ctx.accounts = config.dev.accounts;
+    ctx.amqp = {};
+    ctx.amqp.instance = await amqp.connect(config.rabbit.url);
+    ctx.amqp.channel = await ctx.amqp.instance.createChannel();
+    await ctx.amqp.channel.assertExchange('events', 'topic', {durable: false});
 
-    accounts = config.dev.accounts;
-    await models.accountModel.create({address: accounts[0]});
-    await clearQueues(amqpInstance);
 
-    assetId = await createIssue(ASSET_NAME, accounts[0]);
+    if (!fs.existsSync('tests/node'))
+      fs.mkdirSync('tests/node');
+
+    if (!fs.existsSync('tests/node/waves.jar')) {
+      console.log('going to install waves node');
+      const release = await request({
+        url: 'https://api.github.com/repos/wavesplatform/waves/releases/latest',
+        json: true,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+      }).catch(() => {
+        console.log('github api is not available, will download the 0.14.6 version of node');
+        return {
+          assets: [
+            {
+              url: 'https://api.github.com/repos/wavesplatform/Waves/releases/assets/8932223',
+              browser_download_url: 'https://github.com/wavesplatform/Waves/releases/download/v0.14.6/waves-all-0.14.6.jar'
+            }
+          ]
+        }
+      });
+
+
+      const nodeFile = await request({
+        url: release.assets[0].browser_download_url,
+        encoding: 'binary',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+      });
+
+      fs.writeFileSync('tests/node/waves.jar', nodeFile, 'binary');
+
+    }
+
+    ctx.nodePid = spawn('java', ['-jar', 'waves.jar', 'waves-devnet.conf'], {
+      env: process.env,
+      stdio: 'ignore',
+      cwd: 'tests/node'
+    });
+
+
+    await Promise.delay(20000);
+
+
   });
 
   after(async () => {
-    return mongoose.disconnect();
+    mongoose.disconnect();
+    mongoose.accounts.close();
+    await ctx.amqp.instance.close();
   });
 
-  afterEach(async () => {
-    await clearQueues(amqpInstance);
-  });
 
+  describe('block', () => blockTests(ctx));
 
-  it('send some assets from account0 to account1 and validate countMessages(2) and structure message', async () => {
+  describe('performance', () => performanceTests(ctx));
 
-    const provider = await providerService.get();
+  describe('fuzz', () => fuzzTests(ctx));
 
-    const tx = await provider.signAssetTransaction(
-      config.dev.apiKey, accounts[1], 100, accounts[0], assetId);
-
-    return await Promise.all([
-      (async () => {
-        await provider.sendAssetTransaction(config.dev.apiKey, tx);
-      })(),
-      (async () => {
-        const channel = await amqpInstance.createChannel();
-        await connectToQueue(channel);
-        return await consumeMessages(1, channel, (message) => {
-          const content = JSON.parse(message.content);
-          if (content.id === tx.id)
-            return checkMessage(content);
-          return false;
-        });
-      })()
-    ]);
-  });
+  describe('features', () => featuresTests(ctx));
 
 });
