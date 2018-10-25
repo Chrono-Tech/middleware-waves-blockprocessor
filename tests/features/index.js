@@ -36,16 +36,16 @@ module.exports = (ctx) => {
           autoDelete: true,
           durable: false
         });
-        await ctx.amqp.channel.bindQueue(`app_${config.rabbit.serviceName}_test_features.block`, 'events', `${config.rabbit.serviceName}_transaction.${ctx.accounts[1]}`);
+        await ctx.amqp.channel.bindQueue(`app_${config.rabbit.serviceName}_test_features.block`, 'events', `${config.rabbit.serviceName}_block);
         await new Promise(res =>
           ctx.amqp.channel.consume(`app_${config.rabbit.serviceName}_test_features.block`, async data => {
             if (!data)
               return;
 
             const message = JSON.parse(data.content.toString());
-            expect(message).to.contains.keys('blockNumber');
+            expect(message).to.have.all.keys('block');
 
-            expect(message.blockNumber).to.lessThan(nextBlock);
+            expect(message.block).to.lessThan(nextBlock);
             await ctx.amqp.channel.deleteQueue(`app_${config.rabbit.serviceName}_test_features.block`);
             res();
           }, {noAck: true})
