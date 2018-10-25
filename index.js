@@ -95,6 +95,7 @@ const init = async function () {
 
   let blockEventCallback = async block => {
     log.info(`${block.signature} (${block.number}) added to cache.`);
+    await channel.publish('events', `${config.rabbit.serviceName}_block`, new Buffer(JSON.stringify({block: block.number})));
     let filtered = await filterTxsByAccountService(block.transactions);
     await Promise.all(filtered.map(item => {
       channel.publish('events', `${config.rabbit.serviceName}_transaction.${item.address}`, new Buffer(JSON.stringify(Object.assign(item))));
